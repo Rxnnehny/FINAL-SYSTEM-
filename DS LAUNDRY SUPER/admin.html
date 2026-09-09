@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DS Laundry — Admin</title>
+  <script>
+    // Apply saved theme before first paint to avoid a light/dark flash
+    (function(){ try { document.documentElement.setAttribute('data-theme', localStorage.getItem('ds-theme') || 'light'); } catch(e){} })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="datepicker.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="LOGO.jpg" alt="DS" class="brand-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div class="brand-logo-fallback" style="display:none;width:40px;height:40px;background:var(--gradient);border-radius:10px;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fff;">DS</div>
+    <div>
+      <div class="brand-name">Danny &amp; Sharon</div>
+      <div class="brand-sub">LAUNDRY MGMT</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">OVERVIEW</div>
+    <a class="nav-item active" data-section="dashboard" onclick="showSection('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+
+    <div class="nav-label">BRANCHES</div>
+    <a id="nav-ubujan"   class="nav-item" data-section="branch-ubujan"   onclick="showSection('branch-ubujan')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Ubujan <span class="nav-branch-dot" style="background:#7C3AED"></span>
+    </a>
+    <a id="nav-taloto"   class="nav-item" data-section="branch-taloto"   onclick="showSection('branch-taloto')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Taloto <span class="nav-branch-dot" style="background:#1D4ED8"></span>
+    </a>
+    <a id="nav-bingag"   class="nav-item" data-section="branch-bingag"   onclick="showSection('branch-bingag')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Bingag <span class="nav-branch-dot" style="background:#D97706"></span>
+    </a>
+    <a id="nav-catarman" class="nav-item" data-section="branch-catarman" onclick="showSection('branch-catarman')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Catarman <span class="nav-branch-dot" style="background:#C0311A"></span>
+    </a>
+
+    <div class="nav-label">ANALYTICS</div>
+    <a class="nav-item" data-section="orders" onclick="showSection('orders')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      All Orders
+    </a>
+    <a class="nav-item" data-section="revenue" onclick="showSection('revenue')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Revenue
+    </a>
+
+    <div class="nav-label">MANAGEMENT</div>
+    <a class="nav-item" data-section="prices" onclick="showSection('prices')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><path d="M8 12h4"/></svg>
+      Price Management
+    </a>
+    <a class="nav-item" data-section="employees" onclick="showSection('employees')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Employees
+    </a>
+    <a class="nav-item" data-section="reports" onclick="showSection('reports')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg>
+      Reports &amp; Print
+    </a>
+
+    <div class="nav-label">SYSTEM</div>
+    <a class="nav-item" data-section="announcements" onclick="showSection('announcements')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>
+      Announcements
+    </a>
+    <a class="nav-item" data-section="trash" onclick="showSection('trash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      Trash
+      <span class="nav-badge" id="nav-trash-count" style="display:none">0</span>
+    </a>
+    <a class="nav-item" data-section="settings" onclick="showSection('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout-sidebar" onclick="logoutUser()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+</aside>
+
+<!-- OVERLAY -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" id="hamburger" onclick="toggleMobileSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-date" id="page-date"></div>
+      </div>
+      <span class="topbar-badge">⚡ Super Admin</span>
+    </div>
+    <div class="topbar-right">
+      <div class="last-updated"><span class="live-dot"></span><span id="last-upd">Connecting...</span></div>
+      <button class="btn-announce" id="announce-btn" onclick="openAnnounceModal()">
+        📢 Announcement
+      </button>
+      <button class="btn-refresh" id="refresh-btn" onclick="refreshData()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        <span class="btn-label">Refresh</span>
+      </button>
+      <button class="btn-logout" onclick="logoutUser()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="btn-label">Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content-area">
+
+    <!-- LIVE ANNOUNCEMENT BANNER (broadcast to all branches in real time) -->
+    <div class="announce-banner" id="announce-banner">
+      <div class="announce-icon">📢</div>
+      <div class="announce-text">
+        <span id="announce-banner-msg"></span>
+        <small id="announce-banner-meta"></small>
+      </div>
+      <button class="announce-close" onclick="clearAnnouncement()" title="Clear announcement for everyone">✕</button>
+    </div>
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="section-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📋</div>
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value" id="stat-orders"><span class="loading-pulse"></span></div>
+          <div class="stat-sub">All time · all branches</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">👥</div>
+          <div class="stat-label">Customers</div>
+          <div class="stat-value" id="stat-customers"><span class="loading-pulse"></span></div>
+          <div class="stat-sub">Registered across branches</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon gold">⏳</div>
+          <div class="stat-label">Active Orders</div>
+          <div class="stat-value" id="stat-active"><span class="loading-pulse"></span></div>
+          <div class="stat-sub">In progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">💰</div>
+          <div class="stat-label">Unpaid</div>
+          <div class="stat-value" id="stat-unpaid"><span class="loading-pulse"></span></div>
+          <div class="stat-sub">Unpaid orders</div>
+        </div>
+      </div>
+
+      <!-- Hero revenue -->
+      <div class="hero-revenue-card">
+        <div>
+          <div class="hero-rev-label">Total Revenue Collected</div>
+          <div class="hero-rev-value" id="hero-rev-total">₱0.00</div>
+          <div class="hero-rev-sub">All branches · all time</div>
+        </div>
+        <div class="hero-rev-right">
+          <div class="hero-rev-label">Pending Revenue</div>
+          <div class="hero-rev-value" id="hero-rev-pending">₱0.00</div>
+          <div class="hero-rev-sub">Unpaid orders</div>
+        </div>
+      </div>
+
+      <!-- Branch Performance -->
+      <div class="section-head">
+        <div><div class="section-title">Branch Performance</div><div class="section-sub">Individual stats per branch — live data</div></div>
+      </div>
+      <div class="branches-grid" id="branches-grid">
+        <div class="branch-card"><div class="branch-card-header ubujan"><span class="branch-pill ubujan">📍 Ubujan</span><span class="branch-status-dot"></span></div><div style="padding:20px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+        <div class="branch-card"><div class="branch-card-header taloto"><span class="branch-pill taloto">📍 Taloto</span><span class="branch-status-dot"></span></div><div style="padding:20px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+        <div class="branch-card"><div class="branch-card-header bingag"><span class="branch-pill bingag">📍 Bingag</span><span class="branch-status-dot"></span></div><div style="padding:20px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+        <div class="branch-card"><div class="branch-card-header catarman"><span class="branch-pill catarman">📍 Catarman</span><span class="branch-status-dot"></span></div><div style="padding:20px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+      </div>
+
+      <!-- Comparison + Breakdown -->
+      <div class="two-col-grid">
+        <div class="comparison-card">
+          <div class="card-header"><div><div class="card-title">Revenue Comparison</div><div class="card-sub">All branches · collected</div></div></div>
+          <div class="card-body" id="comparison-body"><div style="color:var(--text-muted);text-align:center;padding:20px"><span class="spinner"></span> Loading...</div></div>
+        </div>
+        <div class="breakdown-card">
+          <div class="card-header"><div><div class="card-title">Quick Breakdown</div><div class="card-sub">Key metrics per branch</div></div></div>
+          <div id="breakdown-body"><div style="color:var(--text-muted);text-align:center;padding:20px"><span class="spinner"></span> Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="recent-card">
+        <div class="recent-header">
+          <div><div class="card-title">Recent Orders</div><div class="card-sub">Latest 20 across all branches</div></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Order ID</th><th>Customer</th><th>Service</th><th>Status</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+            <tbody id="recent-tbody"><tr class="loading-row"><td colspan="8"><span class="spinner"></span> Loading orders...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BRANCH DETAIL ══ -->
+    <div id="section-branch" style="display:none">
+      <div class="stats-grid" id="branch-stats-grid"></div>
+      <div class="recent-card">
+        <div class="recent-header">
+          <div><div class="card-title" id="branch-detail-title">Branch Orders</div><div class="card-sub" id="branch-detail-sub"></div></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Service</th><th>Status</th><th>Payment</th><th>Amount</th><th>Date In</th><th>📅 Out Date</th><th></th></tr></thead>
+            <tbody id="branch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALL ORDERS ══ -->
+    <div id="section-orders" style="display:none">
+      <div class="recent-card">
+        <div class="recent-header">
+          <div><div class="card-title">All Orders</div><div class="card-sub">Every order across all branches</div></div>
+          <div style="display:flex;gap:8px">
+            <select class="form-control" id="filter-branch" onchange="filterOrders()" style="width:140px">
+              <option value="">All Branches</option>
+              <option value="ubujan">Ubujan</option>
+              <option value="taloto">Taloto</option>
+              <option value="bingag">Bingag</option>
+              <option value="catarman">Catarman</option>
+            </select>
+            <select class="form-control" id="filter-status" onchange="filterOrders()" style="width:140px">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="washing">Washing</option>
+              <option value="ready">Ready</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Order ID</th><th>Customer</th><th>Service</th><th>Status</th><th>Payment</th><th>Amount</th><th>Date In</th><th>📅 Out Date</th><th></th></tr></thead>
+            <tbody id="all-orders-tbody"><tr class="loading-row"><td colspan="8"><span class="spinner"></span> Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ REVENUE ══ -->
+    <div id="section-revenue" style="display:none">
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-icon green">💵</div><div class="stat-label">Total Collected</div><div class="stat-value" id="rev-total-collected">₱0</div><div class="stat-sub">All branches</div></div>
+        <div class="stat-card"><div class="stat-icon gold">⏳</div><div class="stat-label">Pending</div><div class="stat-value" id="rev-total-pending">₱0</div><div class="stat-sub">Unpaid</div></div>
+        <div class="stat-card"><div class="stat-icon blue">📊</div><div class="stat-label">Today's Revenue</div><div class="stat-value" id="rev-today">₱0</div><div class="stat-sub">All branches today</div></div>
+        <div class="stat-card"><div class="stat-icon purple">📈</div><div class="stat-label">Avg per Order</div><div class="stat-value" id="rev-avg">₱0</div><div class="stat-sub">Average order value</div></div>
+      </div>
+      <div class="comparison-card">
+        <div class="card-header"><div class="card-title">Revenue by Branch</div></div>
+        <div class="card-body" id="revenue-breakdown"></div>
+      </div>
+    </div>
+
+    <!-- ══ PRICE MANAGEMENT ══ -->
+    <div id="section-prices" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:19.5px;font-weight:800;color:var(--text)">Price Management</div>
+          <div style="font-size:14.5px;color:var(--text-muted);margin-top:2px">Manage services and pricing for each branch</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="openAddAddonModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add New Add-on
+          </button>
+          <button class="btn-primary" onclick="openAddServiceModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add New Service
+          </button>
+        </div>
+      </div>
+
+      <!-- Per-branch service tables -->
+      <div id="prices-content">
+        <div style="text-align:center;padding:40px;color:var(--text-muted)"><span class="spinner"></span> Loading services...</div>
+      </div>
+
+      <!-- Price Change History -->
+      <div class="price-card" style="margin-top:24px">
+        <div class="price-header">
+          <div><div class="card-title">Price Change History</div><div class="card-sub">All price updates across branches</div></div>
+          <select class="form-control" id="history-branch-filter" onchange="loadPriceHistory()" style="width:150px">
+            <option value="">All Branches</option>
+            <option value="ubujan">Ubujan</option>
+            <option value="taloto">Taloto</option>
+            <option value="bingag">Bingag</option>
+            <option value="catarman">Catarman</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Type</th><th>Item</th><th>Old Price</th><th>New Price</th><th>Change</th><th>Changed By</th><th>Date</th></tr></thead>
+            <tbody id="history-tbody"><tr class="loading-row"><td colspan="8"><span class="spinner"></span> Loading history...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ REPORTS ══ -->
+    <div id="section-reports" style="display:none">
+      <!-- Print-only header -->
+      <div class="print-only" id="print-header-block">
+        <div class="print-header">
+          <h1 id="print-title">DS Laundry Management — Report</h1>
+          <p id="print-date-label"></p>
+        </div>
+      </div>
+
+      <div class="no-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:19.5px;font-weight:800;color:var(--text)">Reports &amp; Print</div>
+          <div style="font-size:14.5px;color:var(--text-muted);margin-top:2px" id="report-range-sub">Generate printable summaries for all branches — All Time</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select class="form-control no-print" id="report-range" style="width:150px" onchange="onReportRangeChange()">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          <div class="no-print" id="report-custom-range" style="display:none;align-items:center;gap:8px">
+            <div class="ds-cal-field">
+              <svg class="ds-cal-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <input type="text" data-ds-range-from="report-custom-to" class="no-print" id="report-custom-from" placeholder="From" onchange="loadReportData()"/>
+            </div>
+            <span style="font-size:14px;color:var(--text-muted);font-weight:700">to</span>
+            <div class="ds-cal-field">
+              <svg class="ds-cal-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <input type="text" class="no-print" id="report-custom-to" placeholder="To" onchange="loadReportData()"/>
+            </div>
+          </div>
+          <button class="btn-primary no-print" onclick="printReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Preview & Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Everything below is what gets included in the exported report -->
+      <div id="reports-print-body">
+      <!-- Summary stats -->
+      <div class="stats-grid" id="report-stats">
+        <div class="stat-card"><div class="stat-icon blue">📋</div><div class="stat-label">Total Orders</div><div class="stat-value" id="rpt-orders">—</div><div class="stat-sub">All branches</div></div>
+        <div class="stat-card"><div class="stat-icon green">💵</div><div class="stat-label">Revenue Collected</div><div class="stat-value" id="rpt-collected">—</div><div class="stat-sub">Paid orders</div></div>
+        <div class="stat-card"><div class="stat-icon gold">⏳</div><div class="stat-label">Pending Revenue</div><div class="stat-value" id="rpt-pending">—</div><div class="stat-sub">Unpaid orders</div></div>
+        <div class="stat-card"><div class="stat-icon purple">👥</div><div class="stat-label">Total Customers</div><div class="stat-value" id="rpt-customers">—</div><div class="stat-sub">Registered</div></div>
+      </div>
+
+      <!-- Branch revenue breakdown -->
+      <div class="recent-card" style="margin-top:20px">
+        <div class="recent-header"><div class="card-title">Revenue by Branch</div></div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Total Orders</th><th>Active</th><th>Ready</th><th>Completed</th><th>Revenue Collected</th><th>Pending</th></tr></thead>
+            <tbody id="report-branch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent orders for report -->
+      <div class="recent-card" style="margin-top:20px">
+        <div class="recent-header"><div class="card-title">Orders Detail</div></div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Order ID</th><th>Customer</th><th>Service</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead>
+            <tbody id="report-orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Unpaid orders — ledger-style daily list, all branches -->
+      <div class="recent-card" style="margin-top:20px;break-inside:avoid">
+        <div class="recent-header">
+          <div class="card-title" style="color:#D97706">Unpaid Orders</div>
+          <div id="rpt-unpaid-total" style="font-size:18px;font-weight:900;color:#D97706"></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Order ID</th><th>Customer</th><th>Service</th><th>Date</th><th style="text-align:right">Amount</th></tr></thead>
+            <tbody id="report-unpaid-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      </div><!-- /reports-print-body -->
+    </div>
+
+    <!-- ══ REPORT PREVIEW MODAL — shows exactly what will be exported before
+         the browser's print dialog opens, so it can be checked first ══ -->
+    <div class="modal-overlay no-print" id="report-preview-overlay" style="display:none" onclick="if(event.target===this)closeReportPreview()">
+      <div class="modal" style="max-width:860px">
+        <div class="modal-header">
+          <div class="modal-title">Report Preview</div>
+          <button class="modal-close" onclick="closeReportPreview()">✕</button>
+        </div>
+        <div class="modal-body" style="background:#EEF1F7;padding:24px" id="report-preview-body"></div>
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick="closeReportPreview()">Close</button>
+          <button class="btn-primary" onclick="safePrint()" style="display:flex;align-items:center;gap:6px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print / Download PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EMPLOYEES (all branches — adding/editing staff & PIN codes lives ONLY here) ══ -->
+    <div id="section-employees" style="display:none">
+      <div class="no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+        <div>
+          <div style="font-size:19.5px;font-weight:800;color:var(--text)">Employees</div>
+          <div style="font-size:14.5px;color:var(--text-muted);margin-top:2px">Staff records &amp; login PIN codes for all branches. Branch dashboards can only view &amp; select who's working — adding staff and generating PIN codes happens here.</div>
+        </div>
+        <button class="btn-primary" onclick="openAddEmpModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Employee
+        </button>
+      </div>
+
+      <!-- Stats row -->
+      <div class="quick-btn-grid" id="emp-stats-grid" style="margin-bottom:18px">
+        <button type="button" class="quick-btn" onclick="filterEmpShift('all')">
+          <span class="quick-btn-label">Total Staff</span>
+          <span class="quick-btn-value" id="emp-stat-total">0</span>
+        </button>
+        <button type="button" class="quick-btn" onclick="filterEmpShift('all')">
+          <span class="quick-btn-label">Active</span>
+          <span class="quick-btn-value" id="emp-stat-active">0</span>
+        </button>
+        <button type="button" class="quick-btn" onclick="filterEmpShift('Morning')">
+          <span class="quick-btn-label">Morning Shift</span>
+          <span class="quick-btn-value" id="emp-stat-morning">0</span>
+        </button>
+        <button type="button" class="quick-btn" onclick="filterEmpShift('Afternoon')">
+          <span class="quick-btn-label">Afternoon Shift</span>
+          <span class="quick-btn-value" id="emp-stat-afternoon">0</span>
+        </button>
+      </div>
+
+      <!-- Branch + shift filter tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap" id="emp-branch-tabs">
+        <button class="shift-tab active" data-branch="" onclick="filterEmpBranch('')">All Branches</button>
+        <button class="shift-tab" data-branch="ubujan"   onclick="filterEmpBranch('ubujan')"   style="border-color:#7C3AED">Ubujan</button>
+        <button class="shift-tab" data-branch="taloto"   onclick="filterEmpBranch('taloto')"   style="border-color:#1D4ED8">Taloto</button>
+        <button class="shift-tab" data-branch="bingag"   onclick="filterEmpBranch('bingag')"   style="border-color:#D97706">Bingag</button>
+        <button class="shift-tab" data-branch="catarman" onclick="filterEmpBranch('catarman')" style="border-color:#C0311A">Catarman</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="shift-tab active" data-shift="all"     onclick="filterEmpShift('all')">All Shifts</button>
+        <button class="shift-tab"        data-shift="Morning"  onclick="filterEmpShift('Morning')">🌅 Morning</button>
+        <button class="shift-tab"        data-shift="Afternoon" onclick="filterEmpShift('Afternoon')">🌆 Afternoon</button>
+        <button class="shift-tab"        data-shift="Evening"  onclick="filterEmpShift('Evening')">🌙 Evening</button>
+        <button class="shift-tab"        data-shift="Full Day" onclick="filterEmpShift('Full Day')">☀️ Full Day</button>
+      </div>
+
+      <div class="recent-card">
+        <div class="recent-header">
+          <div><div class="card-title">Staff Directory</div><div class="card-sub" id="emp-count-label">All employees</div></div>
+        </div>
+        <div id="employees-list"><div style="padding:28px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+      </div>
+
+      <!-- ══ LOGIN ACTIVITY — who identified themselves as working, when, and where ══ -->
+      <div class="recent-card" style="margin-top:18px">
+        <div class="recent-header">
+          <div><div class="card-title">Login Activity</div><div class="card-sub" id="emp-login-count-label">Every time someone selects their name on a branch device</div></div>
+          <button class="shift-tab" onclick="loadEmployeeLoginActivity()" title="Refresh">↻ Refresh</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Date &amp; Time</th><th>Employee</th><th>Role</th><th>Branch</th></tr></thead>
+            <tbody id="emp-login-log-tbody"><tr><td colspan="4" style="padding:28px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ANNOUNCEMENT CENTER (history of consecutive announcements & future updates) ══ -->
+    <div id="section-announcements" style="display:none">
+      <div class="no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+        <div>
+          <div style="font-size:19.5px;font-weight:800;color:var(--text)">Announcement Center</div>
+          <div style="font-size:14.5px;color:var(--text-muted);margin-top:2px">Every announcement you've broadcast, newest first. Branches see this same feed and cannot dismiss a live announcement.</div>
+        </div>
+        <button class="btn-announce" id="announce-btn-2" onclick="openAnnounceModal()">📢 New Announcement</button>
+      </div>
+      <div class="recent-card">
+        <div id="announce-history-list"><div style="padding:28px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ══ TRASH / RECYCLE BIN (all branches) ══ -->
+    <div id="section-trash" style="display:none">
+      <div class="no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+        <div>
+          <div style="font-size:19.5px;font-weight:800;color:var(--text)">Trash</div>
+          <div style="font-size:14.5px;color:var(--text-muted);margin-top:2px">Deleted orders &amp; services from every branch are kept here and can be restored anytime.</div>
+        </div>
+        <button class="btn-secondary" onclick="emptyAllTrashPrompt()" style="color:#C0311A;border-color:#C0311A">
+          Empty All Trash
+        </button>
+      </div>
+      <div class="recent-card" style="margin:0">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Branch</th><th>Type</th><th>Item</th><th>Deleted</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="trash-tbody"><tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🗑️</div><h3>Trash is empty</h3></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div id="section-settings" style="display:none">
+      <div class="no-print" style="margin-bottom:18px">
+        <div style="font-size:19.5px;font-weight:800;color:var(--text)">Settings</div>
+        <div style="font-size:14.5px;color:var(--text-muted);margin-top:2px">Preferences for this device. Applies to the admin panel and branch dashboards.</div>
+      </div>
+
+      <div class="comparison-card no-print" style="max-width:640px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🎨 Appearance</div>
+            <div class="card-sub">Choose how the dashboard looks on this device</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="theme-toggle-row">
+            <div class="theme-option theme-option-light" id="theme-opt-light" onclick="setTheme('light')">
+              <span class="theme-option-check">✓</span>
+              <div class="theme-option-icon">☀️</div>
+              <div class="theme-option-label">Light Mode</div>
+              <div class="theme-option-sub">Bright background, dark text</div>
+            </div>
+            <div class="theme-option theme-option-dark" id="theme-opt-dark" onclick="setTheme('dark')">
+              <span class="theme-option-check">✓</span>
+              <div class="theme-option-icon">🌙</div>
+              <div class="theme-option-label">Dark Mode</div>
+              <div class="theme-option-sub">Dark background, easier at night</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:14px">Your choice is saved to this browser and stays applied next time you sign in here.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+</div><!-- /main -->
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ADD SERVICE MODAL -->
+<div class="modal-overlay" id="add-service-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Service</div>
+      <button class="modal-close" onclick="closeAddServiceModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Branch</label>
+        <select class="form-control" id="new-svc-branch">
+          <option value="ubujan">Ubujan</option>
+          <option value="taloto">Taloto</option>
+          <option value="bingag">Bingag</option>
+          <option value="catarman">Catarman</option>
+          <option value="all">All Branches</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Name</label>
+        <input type="text" class="form-control" id="new-svc-name" placeholder="e.g. Drop-Off, Wash, Fold"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₱)</label>
+        <input type="number" class="form-control" id="new-svc-price" placeholder="e.g. 210" min="0" step="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duration</label>
+        <input type="text" class="form-control" id="new-svc-duration" placeholder="e.g. 1 day, Same day"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAddServiceModal()">Cancel</button>
+      <button class="btn-primary" onclick="addNewService()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Service
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PRICE MODAL -->
+<div class="modal-overlay" id="edit-price-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Service Price</div>
+      <button class="modal-close" onclick="closeEditPriceModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="edit-svc-info" style="background:var(--hover);border-radius:var(--r-md);padding:12px;margin-bottom:16px;font-size:15px;color:var(--text-muted)"></div>
+      <div class="form-group">
+        <label class="form-label">New Price (₱)</label>
+        <input type="number" class="form-control" id="edit-svc-price" min="0" step="1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duration (optional)</label>
+        <input type="text" class="form-control" id="edit-svc-duration"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditPriceModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditedPrice()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ADD-ON MODAL -->
+<div class="modal-overlay" id="add-addon-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Add-on</div>
+      <button class="modal-close" onclick="closeAddAddonModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Branch</label>
+        <select class="form-control" id="new-addon-branch">
+          <option value="ubujan">Ubujan</option>
+          <option value="taloto">Taloto</option>
+          <option value="bingag">Bingag</option>
+          <option value="catarman">Catarman</option>
+          <option value="all">All Branches</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Add-on Name</label>
+        <input type="text" class="form-control" id="new-addon-name" placeholder="e.g. Fabcon"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₱)</label>
+        <input type="number" class="form-control" id="new-addon-price" placeholder="e.g. 15" min="0" step="1"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAddAddonModal()">Cancel</button>
+      <button class="btn-primary" onclick="addNewAddon()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Add-on
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ADD-ON PRICE MODAL -->
+<div class="modal-overlay" id="edit-addon-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Add-on Price</div>
+      <button class="modal-close" onclick="closeEditAddonModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="edit-addon-info" style="background:var(--hover);border-radius:var(--r-md);padding:12px;margin-bottom:16px;font-size:15px;color:var(--text-muted)"></div>
+      <div class="form-group">
+        <label class="form-label">New Price (₱)</label>
+        <input type="number" class="form-control" id="edit-addon-price" min="0" step="1"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditAddonModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditedAddonPrice()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="announce-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📢 Broadcast Announcement</div>
+      <button class="modal-close" onclick="closeAnnounceModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--hover);border-radius:var(--r-md);padding:10px 12px;margin-bottom:16px;font-size:14px;color:var(--text-muted)">
+        This message appears instantly at the top of every screen for <strong>all 4 branches</strong> (Ubujan, Taloto, Bingag, Catarman) until you clear it.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message</label>
+        <textarea class="form-control" id="announce-msg-input" rows="4" maxlength="280" placeholder="e.g. System maintenance tonight 9–10PM. Please save your work." style="resize:vertical"></textarea>
+      </div>
+      <div id="announce-current-info" style="display:none;font-size:13.5px;color:var(--text-light);margin-top:4px"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-secondary" id="announce-clear-btn" onclick="clearAnnouncement()" style="display:none">Clear Live Announcement</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn-secondary" onclick="closeAnnounceModal()">Cancel</button>
+        <button class="btn-primary" onclick="sendAnnouncement()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Broadcast Now
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE MODAL (super admin only) -->
+<div class="modal-overlay" id="add-emp-modal" style="display:none">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Add Employee</div>
+      <button class="modal-close" onclick="closeAddEmpModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Branch *</label>
+        <select class="form-control" id="emp-branch">
+          <option value="">— Select branch —</option>
+          <option value="ubujan">Ubujan</option>
+          <option value="taloto">Taloto</option>
+          <option value="bingag">Bingag</option>
+          <option value="catarman">Catarman</option>
+        </select>
+      </div>
+
+      <!-- Profile photo -->
+      <div style="text-align:center;margin:16px 0 18px">
+        <div class="avatar-upload-wrap" onclick="document.getElementById('emp-photo-input').click()">
+          <img id="emp-photo-preview" class="avatar-img" src="" style="display:none"/>
+          <div id="emp-avatar-placeholder" class="avatar-placeholder">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B6FD8" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style="font-size:11.5px;color:var(--primary);font-weight:600">Upload Photo</span>
+          </div>
+          <div class="avatar-edit-badge">📷</div>
+        </div>
+        <input type="file" id="emp-photo-input" accept="image/*" style="display:none" onchange="previewEmpPhoto(event)"/>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:6px">Click to upload profile photo</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Full Name *</label>
+          <input class="form-control" id="emp-name" placeholder="e.g. Juan dela Cruz"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Role / Position *</label>
+          <select class="form-control" id="emp-role">
+            <option value="">— Select role —</option>
+            <option>Washer</option>
+            <option>Folder</option>
+            <option>Cashier</option>
+            <option>Supervisor</option>
+            <option>Helper</option>
+            <option>Manager</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Phone Number</label>
+          <input class="form-control" id="emp-phone" placeholder="09XX XXX XXXX" type="tel"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="emp-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="on-leave">On Leave</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="form-label">Shift Schedule *</label>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="shift-selector">
+          <div class="shift-sel-opt" data-val="Morning"   onclick="selectShift('Morning')"  >🌅 Morning <span style="font-size:13px;color:var(--text-muted)">(6AM–2PM)</span></div>
+          <div class="shift-sel-opt" data-val="Afternoon" onclick="selectShift('Afternoon')">🌆 Afternoon <span style="font-size:13px;color:var(--text-muted)">(2PM–10PM)</span></div>
+          <div class="shift-sel-opt" data-val="Evening"   onclick="selectShift('Evening')"  >🌙 Evening <span style="font-size:13px;color:var(--text-muted)">(10PM–6AM)</span></div>
+          <div class="shift-sel-opt" data-val="Full Day"  onclick="selectShift('Full Day')" >☀️ Full Day <span style="font-size:13px;color:var(--text-muted)">(8AM–5PM)</span></div>
+        </div>
+        <input type="hidden" id="emp-shift"/>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="form-label">Days Off</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="days-off-wrap">
+          <div class="day-chip" data-day="Sun" onclick="toggleDayOff(this)">Sun</div>
+          <div class="day-chip" data-day="Mon" onclick="toggleDayOff(this)">Mon</div>
+          <div class="day-chip" data-day="Tue" onclick="toggleDayOff(this)">Tue</div>
+          <div class="day-chip" data-day="Wed" onclick="toggleDayOff(this)">Wed</div>
+          <div class="day-chip" data-day="Thu" onclick="toggleDayOff(this)">Thu</div>
+          <div class="day-chip" data-day="Fri" onclick="toggleDayOff(this)">Fri</div>
+          <div class="day-chip" data-day="Sat" onclick="toggleDayOff(this)">Sat</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="form-label">Notes / Remarks</label>
+        <input class="form-control" id="emp-notes" placeholder="e.g. Handles heavy loads..."/>
+      </div>
+
+      <div style="margin-top:12px;padding:12px;border:1.5px dashed var(--primary);border-radius:var(--r-md);background:var(--primary-light)">
+        <label class="form-label" style="display:flex;align-items:center;gap:6px">🔑 Login PIN <span style="font-weight:500;color:var(--text-muted);font-size:13px">(optional — lets them appear on the branch's "Who's working?" screen)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-control" id="emp-pin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="letter-spacing:4px;font-weight:700" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"/>
+          <button type="button" class="btn-secondary" style="white-space:nowrap" onclick="document.getElementById('emp-pin').value=String(Math.floor(1000+Math.random()*9000))">🎲 Generate</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeAddEmpModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEmployee()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Save Employee
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EMPLOYEE MODAL (super admin only) -->
+<div class="modal-overlay" id="edit-emp-modal" style="display:none">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Employee</div>
+      <button class="modal-close" onclick="closeEditEmpModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-emp-id"/>
+      <input type="hidden" id="edit-emp-branch"/>
+      <div style="text-align:center;margin-bottom:18px">
+        <div class="avatar-upload-wrap" onclick="document.getElementById('edit-emp-photo-input').click()">
+          <img id="edit-emp-photo-preview" class="avatar-img" src="" style="display:none"/>
+          <div id="edit-emp-avatar-placeholder" class="avatar-placeholder">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B6FD8" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span style="font-size:11.5px;color:var(--primary);font-weight:600">Upload Photo</span>
+          </div>
+          <div class="avatar-edit-badge">📷</div>
+        </div>
+        <input type="file" id="edit-emp-photo-input" accept="image/*" style="display:none" onchange="previewEditEmpPhoto(event)"/>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Full Name *</label>
+          <input class="form-control" id="edit-emp-name"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Role / Position *</label>
+          <select class="form-control" id="edit-emp-role">
+            <option value="">— Select role —</option>
+            <option>Washer</option>
+            <option>Folder</option>
+            <option>Cashier</option>
+            <option>Supervisor</option>
+            <option>Helper</option>
+            <option>Manager</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Phone Number</label>
+          <input class="form-control" id="edit-emp-phone" type="tel"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="edit-emp-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="on-leave">On Leave</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="form-label">Shift Schedule *</label>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="edit-shift-selector">
+          <div class="shift-sel-opt" data-val="Morning"   onclick="selectEditShift('Morning')"  >🌅 Morning <span style="font-size:13px;color:var(--text-muted)">(6AM–2PM)</span></div>
+          <div class="shift-sel-opt" data-val="Afternoon" onclick="selectEditShift('Afternoon')">🌆 Afternoon <span style="font-size:13px;color:var(--text-muted)">(2PM–10PM)</span></div>
+          <div class="shift-sel-opt" data-val="Evening"   onclick="selectEditShift('Evening')"  >🌙 Evening <span style="font-size:13px;color:var(--text-muted)">(10PM–6AM)</span></div>
+          <div class="shift-sel-opt" data-val="Full Day"  onclick="selectEditShift('Full Day')" >☀️ Full Day <span style="font-size:13px;color:var(--text-muted)">(8AM–5PM)</span></div>
+        </div>
+        <input type="hidden" id="edit-emp-shift"/>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="form-label">Days Off</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="edit-days-off-wrap">
+          <div class="day-chip" data-day="Sun" onclick="toggleDayOff(this)">Sun</div>
+          <div class="day-chip" data-day="Mon" onclick="toggleDayOff(this)">Mon</div>
+          <div class="day-chip" data-day="Tue" onclick="toggleDayOff(this)">Tue</div>
+          <div class="day-chip" data-day="Wed" onclick="toggleDayOff(this)">Wed</div>
+          <div class="day-chip" data-day="Thu" onclick="toggleDayOff(this)">Thu</div>
+          <div class="day-chip" data-day="Fri" onclick="toggleDayOff(this)">Fri</div>
+          <div class="day-chip" data-day="Sat" onclick="toggleDayOff(this)">Sat</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="form-label">Notes / Remarks</label>
+        <input class="form-control" id="edit-emp-notes"/>
+      </div>
+
+      <div style="margin-top:12px;padding:12px;border:1.5px dashed var(--primary);border-radius:var(--r-md);background:var(--primary-light)">
+        <label class="form-label" style="display:flex;align-items:center;gap:6px">🔑 Login PIN</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-control" id="edit-emp-pin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="letter-spacing:4px;font-weight:700" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"/>
+          <button type="button" class="btn-secondary" style="white-space:nowrap" onclick="document.getElementById('edit-emp-pin').value=String(Math.floor(1000+Math.random()*9000))">🎲 Generate</button>
+          <button type="button" class="btn-secondary" style="white-space:nowrap;color:#DC2626" onclick="document.getElementById('edit-emp-pin').value=''" title="Remove PIN — they won't appear on the login screen">Clear</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-secondary" style="color:#C0311A;border-color:#C0311A" onclick="deleteEmployee(document.getElementById('edit-emp-id').value, document.getElementById('edit-emp-name').value)">Delete</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="closeEditEmpModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveEditEmployee()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── GLOBALS ──
+let branchData = {};
+let allOrdersData = [];
+let currentBranchSection = null;
+let currentUser = null;
+let editServiceContext = null;
+let priceListeners = {};
+let addonListeners = {};
+let editAddonContext = null;
+
+// ── AUTH ──
+firebase.auth().onAuthStateChanged(async user => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  currentUser = user;
+  setDate();
+  // Migrate all branches to sequential 4-digit order IDs (runs once per branch)
+  for (const b of DS_BRANCHES) await migrateOrderIds(b.id);
+  await loadDashboard();
+  loadPriceManagement();
+  loadPriceHistory();
+  loadReportData();
+  listenForAnnouncement();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  EMPLOYEES (super admin only — this is the ONLY place staff are
+//  added or PIN login codes are generated; branch dashboards can
+//  only view the roster and select who's working a shift).
+// ═══════════════════════════════════════════════════════════════
+let allEmployeesData = [];
+let empBranchFilter = '';
+let empShiftFilter = 'all';
+let selectedShift = '', editSelectedShift = '';
+let empPhotoBase64 = '', editEmpPhotoBase64 = '';
+
+async function loadAllEmployees() {
+  try {
+    const snaps = await Promise.all(DS_BRANCHES.map(b => branchCol(b.id, 'employees').orderBy('name').get()));
+    allEmployeesData = [];
+    snaps.forEach((snap, i) => {
+      snap.docs.forEach(d => allEmployeesData.push({ id: d.id, branchId: DS_BRANCHES[i].id, branch: DS_BRANCHES[i], ...d.data() }));
+    });
+    renderEmployeeCards();
+  } catch(e) { console.error('loadAllEmployees:', e); showToast('Error loading employees', 'error'); }
+}
+
+// Pulls the most recent login events (each written when someone picks their
+// name + PIN on a branch device) across every branch, newest first, so admin
+// can see who was using the system and when — e.g. to check who was on shift
+// if something needs to be sorted out for a given day.
+async function loadEmployeeLoginActivity() {
+  const tbody = document.getElementById('emp-login-log-tbody');
+  const label = document.getElementById('emp-login-count-label');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="padding:28px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</td></tr>`;
+  try {
+    const snaps = await Promise.all(DS_BRANCHES.map(b =>
+      branchCol(b.id, 'employeeLogins').orderBy('loggedInAt', 'desc').limit(50).get()
+    ));
+    let logs = [];
+    snaps.forEach(snap => snap.docs.forEach(d => logs.push({ id: d.id, ...d.data() })));
+    logs.sort((a, b) => (b.loggedInAt?.toMillis?.() || 0) - (a.loggedInAt?.toMillis?.() || 0));
+    logs = logs.slice(0, 200);
+    if (!tbody) return;
+    if (!logs.length) {
+      tbody.innerHTML = `<tr><td colspan="4" style="padding:28px;text-align:center;color:var(--text-muted)">No login activity recorded yet</td></tr>`;
+      if (label) label.textContent = 'Every time someone selects their name on a branch device';
+      return;
+    }
+    tbody.innerHTML = logs.map(l => {
+      const when = l.loggedInAt?.toDate ? l.loggedInAt.toDate().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      const branch = DS_BRANCHES.find(b => b.id === l.branchId);
+      return `<tr>
+        <td>${when}</td>
+        <td style="font-weight:700">${escHtml(l.employeeName||'—')}</td>
+        <td>${escHtml(l.role||'—')}</td>
+        <td><span class="branch-pill ${l.branchId||''}" style="${branch?'':'background:var(--text-muted)'}">${escHtml(l.branchName || branch?.name || '—')}</span></td>
+      </tr>`;
+    }).join('');
+    if (label) label.textContent = `${logs.length} recent login${logs.length!==1?'s':''} across all branches`;
+  } catch(e) {
+    console.error('loadEmployeeLoginActivity:', e);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="padding:28px;text-align:center;color:var(--text-muted)">Couldn't load login activity</td></tr>`;
+  }
+}
+
+function filterEmpBranch(branchId) {
+  empBranchFilter = branchId;
+  document.querySelectorAll('#emp-branch-tabs .shift-tab').forEach(t => t.classList.toggle('active', t.dataset.branch === branchId));
+  renderEmployeeCards();
+}
+
+function filterEmpShift(shift) {
+  empShiftFilter = shift;
+  document.querySelectorAll('#section-employees .shift-tab[data-shift]').forEach(t => t.classList.toggle('active', t.dataset.shift === shift));
+  renderEmployeeCards();
+}
+
+function renderEmployeeStats() {
+  const total     = allEmployeesData.length;
+  const active    = allEmployeesData.filter(e=>e.status==='active').length;
+  const morning   = allEmployeesData.filter(e=>e.shift==='Morning').length;
+  const afternoon = allEmployeesData.filter(e=>e.shift==='Afternoon').length;
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('emp-stat-total', total);
+  set('emp-stat-active', active);
+  set('emp-stat-morning', morning);
+  set('emp-stat-afternoon', afternoon);
+}
+
+function renderEmployeeCards() {
+  renderEmployeeStats();
+  const container = document.getElementById('employees-list');
+  if (!container) return;
+  let data = allEmployeesData;
+  if (empBranchFilter) data = data.filter(e=>e.branchId===empBranchFilter);
+  if (empShiftFilter !== 'all') data = data.filter(e=>e.shift===empShiftFilter);
+  const label = document.getElementById('emp-count-label');
+  if (label) label.textContent = `${data.length} employee${data.length!==1?'s':''}` + (empBranchFilter?' · '+DS_BRANCHES.find(b=>b.id===empBranchFilter)?.name:'') + (empShiftFilter!=='all'?' · '+empShiftFilter+' shift':'');
+  if (!data.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:40px"><div class="empty-icon">👤</div><h3>No employees found</h3><p style="font-size:14.5px;color:var(--text-muted);margin-top:4px">Click "Add Employee" to get started</p></div>`;
+    return;
+  }
+  const colors = ['#1B6FD8','#7C3AED','#D97706','#C0311A','#16A34A','#0891B2'];
+  const statusBadgeMap = {active:'badge-paid',inactive:'badge-done','on-leave':'badge-pending'};
+  const statusLabel    = {active:'Active',inactive:'Inactive','on-leave':'On Leave'};
+  const shiftColors    = {Morning:'#D97706',Afternoon:'#1B6FD8',Evening:'#7C3AED','Full Day':'#16A34A'};
+  container.innerHTML = data.map(e => {
+    const col   = colors[(e.name||'A').charCodeAt(0) % colors.length];
+    const sc    = shiftColors[e.shift]||'#6B7A99';
+    const daysOff = (e.daysOff||[]).join(', ') || 'None';
+    const photoHtml = e.photoUrl
+      ? `<img src="${e.photoUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px"/>`
+      : '';
+    return `<div class="emp-list-card" style="border-left-color:${sc}">
+      <div class="emp-avatar" style="background:${col}">
+        ${photoHtml}
+        ${!e.photoUrl ? (e.name||'E').charAt(0).toUpperCase() : ''}
+      </div>
+      <div class="emp-info">
+        <div class="emp-name">${escHtml(e.name||'—')}</div>
+        <div class="emp-role">${escHtml(e.role||'—')}</div>
+        <div class="emp-meta">
+          <span class="emp-branch-tag" style="background:${e.branch?.color||'#6B7A99'}">${escHtml(e.branch?.name||e.branchId)}</span>
+          ${e.shift?`<span class="emp-tag" style="color:${sc};border-color:${sc}30;background:${sc}12">⏰ ${escHtml(e.shift)}</span>`:''}
+          ${e.phone?`<span class="emp-tag">📱 ${escHtml(e.phone)}</span>`:''}
+          ${e.pin?`<span class="emp-tag">🔑 PIN set</span>`:`<span class="emp-tag warn">⚠️ No PIN</span>`}
+          ${daysOff!=='None'?`<span class="emp-tag" style="color:var(--red)">🚫 Off: ${escHtml(daysOff)}</span>`:''}
+        </div>
+      </div>
+      <div class="emp-actions">
+        <span class="badge ${statusBadgeMap[e.status]||'badge-done'}">${statusLabel[e.status]||e.status||'—'}</span>
+        <button class="btn-icon edit" title="Edit" style="padding:4px 8px;font-size:13px;background:var(--primary-light);border:1px solid rgba(27,111,216,.2);border-radius:6px;cursor:pointer;color:var(--primary)" onclick="openEditEmpModal('${e.branchId}','${e.id}')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddEmpModal() {
+  selectedShift = '';
+  empPhotoBase64 = '';
+  document.getElementById('emp-branch').value = empBranchFilter || '';
+  document.getElementById('emp-name').value   = '';
+  document.getElementById('emp-role').value   = '';
+  document.getElementById('emp-phone').value  = '';
+  document.getElementById('emp-notes').value  = '';
+  document.getElementById('emp-status').value = 'active';
+  document.getElementById('emp-shift').value  = '';
+  document.getElementById('emp-pin').value    = '';
+  document.getElementById('emp-photo-preview').style.display = 'none';
+  document.getElementById('emp-avatar-placeholder').style.display = 'flex';
+  document.querySelectorAll('#add-emp-modal .shift-sel-opt').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('#add-emp-modal .day-chip').forEach(el => el.classList.remove('off'));
+  document.getElementById('add-emp-modal').style.display = 'flex';
+}
+function closeAddEmpModal() { document.getElementById('add-emp-modal').style.display = 'none'; }
+
+function selectShift(val) {
+  selectedShift = val;
+  document.getElementById('emp-shift').value = val;
+  document.querySelectorAll('#add-emp-modal .shift-sel-opt').forEach(el => el.classList.toggle('selected', el.dataset.val === val));
+}
+function selectEditShift(val) {
+  editSelectedShift = val;
+  document.getElementById('edit-emp-shift').value = val;
+  document.querySelectorAll('#edit-shift-selector .shift-sel-opt').forEach(el => el.classList.toggle('selected', el.dataset.val === val));
+}
+function toggleDayOff(el) { el.classList.toggle('off'); }
+
+function previewEmpPhoto(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    empPhotoBase64 = e.target.result;
+    document.getElementById('emp-photo-preview').src = empPhotoBase64;
+    document.getElementById('emp-photo-preview').style.display = 'block';
+    document.getElementById('emp-avatar-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function previewEditEmpPhoto(evt) {
+  const file = evt.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    editEmpPhotoBase64 = e.target.result;
+    document.getElementById('edit-emp-photo-preview').src = editEmpPhotoBase64;
+    document.getElementById('edit-emp-photo-preview').style.display = 'block';
+    document.getElementById('edit-emp-avatar-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveEmployee() {
+  const branchId = document.getElementById('emp-branch').value;
+  const name   = document.getElementById('emp-name').value.trim();
+  const role   = document.getElementById('emp-role').value;
+  const phone  = document.getElementById('emp-phone').value.trim();
+  const status = document.getElementById('emp-status').value;
+  const shift  = document.getElementById('emp-shift').value || selectedShift;
+  const notes  = document.getElementById('emp-notes').value.trim();
+  const daysOff= [...document.querySelectorAll('#add-emp-modal .day-chip.off')].map(el=>el.dataset.day);
+  const pin    = document.getElementById('emp-pin').value.trim();
+
+  if (!branchId) { showToast('Please select a branch','error'); return; }
+  if (!name)  { showToast('Name is required','error'); return; }
+  if (!role)  { showToast('Please select a role','error'); return; }
+  if (!shift) { showToast('Please select a shift','error'); return; }
+  if (pin && pin.length !== 4) { showToast('PIN must be exactly 4 digits','error'); return; }
+  if (pin && allEmployeesData.some(e => e.branchId===branchId && e.pin === pin)) { showToast('That PIN is already used by another employee at this branch — pick a different one','error'); return; }
+
+  try {
+    const empData = {
+      name, role, phone, status, shift, notes, daysOff, pin,
+      photoUrl: empPhotoBase64 || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const ref = await branchCol(branchId,'employees').add(empData);
+    allEmployeesData.unshift({id:ref.id, branchId, branch: DS_BRANCHES.find(b=>b.id===branchId), ...empData});
+    closeAddEmpModal();
+    renderEmployeeCards();
+    showToast(`${name} added to ${DS_BRANCHES.find(b=>b.id===branchId)?.name}!`, 'success');
+  } catch(e) { console.error(e); showToast('Error saving employee','error'); }
+}
+
+function openEditEmpModal(branchId, id) {
+  const e = allEmployeesData.find(x => x.id === id && x.branchId === branchId);
+  if (!e) return;
+  document.getElementById('edit-emp-id').value     = id;
+  document.getElementById('edit-emp-branch').value = branchId;
+  document.getElementById('edit-emp-name').value  = e.name || '';
+  document.getElementById('edit-emp-role').value  = e.role || '';
+  document.getElementById('edit-emp-phone').value = e.phone || '';
+  document.getElementById('edit-emp-status').value= e.status || 'active';
+  document.getElementById('edit-emp-notes').value = e.notes || '';
+  document.getElementById('edit-emp-shift').value = e.shift || '';
+  document.getElementById('edit-emp-pin').value   = e.pin || '';
+  editSelectedShift = e.shift || '';
+  editEmpPhotoBase64 = e.photoUrl || '';
+  document.querySelectorAll('#edit-shift-selector .shift-sel-opt').forEach(el =>
+    el.classList.toggle('selected', el.dataset.val === e.shift));
+  const daysOff = e.daysOff || [];
+  document.querySelectorAll('#edit-days-off-wrap .day-chip').forEach(el =>
+    el.classList.toggle('off', daysOff.includes(el.dataset.day)));
+  const preview = document.getElementById('edit-emp-photo-preview');
+  const placeholder = document.getElementById('edit-emp-avatar-placeholder');
+  if (e.photoUrl) { preview.src = e.photoUrl; preview.style.display = 'block'; placeholder.style.display = 'none'; }
+  else { preview.style.display = 'none'; placeholder.style.display = 'flex'; }
+  document.getElementById('edit-emp-modal').style.display = 'flex';
+}
+function closeEditEmpModal() { document.getElementById('edit-emp-modal').style.display = 'none'; }
+
+async function saveEditEmployee() {
+  const id       = document.getElementById('edit-emp-id').value;
+  const branchId = document.getElementById('edit-emp-branch').value;
+  const name   = document.getElementById('edit-emp-name').value.trim();
+  const role   = document.getElementById('edit-emp-role').value;
+  const phone  = document.getElementById('edit-emp-phone').value.trim();
+  const status = document.getElementById('edit-emp-status').value;
+  const shift  = document.getElementById('edit-emp-shift').value || editSelectedShift;
+  const notes  = document.getElementById('edit-emp-notes').value.trim();
+  const daysOff= [...document.querySelectorAll('#edit-days-off-wrap .day-chip.off')].map(el => el.dataset.day);
+  const pin    = document.getElementById('edit-emp-pin').value.trim();
+
+  if (!name)  { showToast('Name is required','error'); return; }
+  if (!role)  { showToast('Please select a role','error'); return; }
+  if (!shift) { showToast('Please select a shift','error'); return; }
+  if (pin && pin.length !== 4) { showToast('PIN must be exactly 4 digits','error'); return; }
+  if (pin && allEmployeesData.some(e => e.branchId===branchId && e.pin === pin && e.id !== id)) { showToast('That PIN is already used by another employee at this branch — pick a different one','error'); return; }
+
+  try {
+    const updates = { name, role, phone, status, shift, notes, daysOff, pin, photoUrl: editEmpPhotoBase64 || '' };
+    await branchCol(branchId, 'employees').doc(id).update(updates);
+    const idx = allEmployeesData.findIndex(e => e.id === id && e.branchId === branchId);
+    if (idx !== -1) allEmployeesData[idx] = { ...allEmployeesData[idx], ...updates };
+    closeEditEmpModal();
+    renderEmployeeCards();
+    showToast(`${name} updated successfully!`, 'success');
+  } catch(e) { console.error(e); showToast('Error updating employee','error'); }
+}
+
+async function deleteEmployee(id, name) {
+  const branchId = document.getElementById('edit-emp-branch').value;
+  if (!branchId || !id) return;
+  if (!confirm(`Delete ${name || 'this employee'}? They'll be moved to Trash and can be restored later.`)) return;
+  try {
+    const ref = branchCol(branchId, 'employees').doc(id);
+    const snap = await ref.get();
+    if (!snap.exists) { showToast('Employee not found', 'error'); return; }
+    const data = snap.data();
+    await branchCol(branchId, 'trash').doc(`employees_${id}`).set({
+      originalCollection: 'employees',
+      originalId: id,
+      data: data,
+      label: name || data.name || 'Employee',
+      deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await ref.delete();
+    allEmployeesData = allEmployeesData.filter(e => !(e.id===id && e.branchId===branchId));
+    closeEditEmpModal();
+    renderEmployeeCards();
+    showToast(`${name||'Employee'} moved to Trash`, 'info');
+  } catch(e) { console.error(e); showToast('Error deleting employee','error'); }
+}
+
+// ── ONE-TIME MIGRATION: renumber all existing orders 0001, 0002… per branch ──
+async function migrateOrderIds(branchId) {
+  try {
+    const branchDoc = await db.collection('branches').doc(branchId).get();
+    if (branchDoc.data()?.orderIdMigrated) return;
+    const snap = await branchCol(branchId, 'orders').orderBy('createdAt', 'asc').get();
+    if (snap.empty) {
+      await db.collection('branches').doc(branchId).set({ orderIdMigrated: true }, { merge: true });
+      return;
+    }
+    const docs = snap.docs;
+    let counter = 1;
+    for (let i = 0; i < docs.length; i += 499) {
+      const batch = db.batch();
+      docs.slice(i, i + 499).forEach(d => {
+        batch.update(d.ref, { orderId: String(counter++).padStart(4, '0') });
+      });
+      if (i + 499 >= docs.length) {
+        batch.set(db.collection('branches').doc(branchId), { orderIdMigrated: true }, { merge: true });
+      }
+      await batch.commit();
+    }
+    console.log(`[DS] Migrated ${docs.length} orders for ${branchId}`);
+  } catch(e) { console.error('Migration error:', branchId, e); }
+}
+
+// ── DELETE ORDER (admin) ──
+async function deleteAdminOrder(branchId, docId, orderId) {
+  if (!confirm(`Delete order #${orderId} from ${branchId}? It will be moved to Trash and can be restored later.`)) return;
+  const ok = await adminSoftDelete(branchId, 'orders', docId, `Order #${orderId}`);
+  if (!ok) return;
+  try {
+    // Remove from local caches
+    if (branchData[branchId]) {
+      branchData[branchId].orders = branchData[branchId].orders.filter(o => o.id !== docId);
+      const removed = branchData[branchId].orders.length;
+      // Recalculate branch totals
+      const orders = branchData[branchId].orders;
+      branchData[branchId].active    = orders.filter(o=>['pending','washing'].includes(o.status)).length;
+      branchData[branchId].ready     = orders.filter(o=>o.status==='ready').length;
+      branchData[branchId].done      = orders.filter(o=>o.status==='done').length;
+      branchData[branchId].collected = orders.filter(o=>o.isPaid).reduce((s,o)=>s+(o.amount||0),0);
+      branchData[branchId].pending   = orders.filter(o=>!o.isPaid).reduce((s,o)=>s+(o.amount||0),0);
+    }
+    allOrdersData = allOrdersData.filter(o => o.id !== docId);
+    // Re-render whatever is currently visible
+    renderBranchCards();
+    renderRecentOrders();
+    if (currentBranchSection === branchId) loadBranchDetail(branchId);
+    filterOrders();
+    loadReportData();
+    showToast(`Order #${orderId} moved to Trash`, 'info');
+  } catch(e) { console.error(e); showToast('Error deleting order', 'error'); }
+}
+
+// NOTE: Out Date is no longer admin-editable. It's derived from the order's
+// status — it's stamped automatically the moment a branch marks an order
+// Done (see updateStatus in index.html) and cleared if it moves off Done.
+// Rendered read-only below via outDateCell().
+function outDateCell(o) {
+  return o.outDate
+    ? `<span style="font-size:13.5px;font-weight:700;color:#16A34A;background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:7px;padding:4px 9px;display:inline-block" title="Set automatically when the order was marked Done">${fmtDate(o.outDate)}</span>`
+    : `<span style="font-size:13px;font-weight:600;color:var(--text-muted);background:#FFF7ED;border:1.5px solid var(--border);border-radius:7px;padding:4px 9px;display:inline-block" title="Set automatically once the order is marked Done">— not done yet</span>`;
+}
+
+function setDate() {
+  const now = new Date();
+  document.getElementById('page-date').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('last-upd').textContent = 'Updated ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+function logoutUser() {
+  firebase.auth().signOut().then(() => window.location.href = 'login.html');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LIVE ANNOUNCEMENT — broadcast a message instantly to all 4
+//  branches. Live banner state lives at system/announcement, but
+//  every broadcast is ALSO appended to the `announcements` history
+//  collection so Super Admin (and branches, read-only) can see every
+//  consecutive announcement and future update ever sent, not just
+//  the current one. Branch dashboards cannot dismiss a live banner —
+//  only Super Admin can clear it (here, or from the Announcement
+//  Center tab).
+// ═══════════════════════════════════════════════════════════════
+let _currentAnnouncement = null;
+let announceHistoryData = [];
+
+function listenForAnnouncement() {
+  db.collection('system').doc('announcement').onSnapshot(doc => {
+    const d = doc.exists ? doc.data() : null;
+    _currentAnnouncement = (d && d.active) ? d : null;
+    renderAnnounceBanner();
+    renderAnnounceModalState();
+  }, err => console.error('Announcement listener error:', err));
+}
+
+function renderAnnounceBanner() {
+  const banner = document.getElementById('announce-banner');
+  const btn = document.getElementById('announce-btn');
+  if (_currentAnnouncement) {
+    document.getElementById('announce-banner-msg').textContent = _currentAnnouncement.message;
+    const when = _currentAnnouncement.updatedAt?.toDate ? _currentAnnouncement.updatedAt.toDate().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    document.getElementById('announce-banner-meta').textContent = 'Broadcasting live to all branches' + (when ? ' · sent ' + when : '');
+    banner.classList.add('show');
+    btn.classList.add('is-live');
+    btn.textContent = '📢 Live — Edit / Clear';
+  } else {
+    banner.classList.remove('show');
+    btn.classList.remove('is-live');
+    btn.textContent = '📢 Announcement';
+  }
+}
+
+function renderAnnounceModalState() {
+  const clearBtn = document.getElementById('announce-clear-btn');
+  const info = document.getElementById('announce-current-info');
+  if (_currentAnnouncement) {
+    clearBtn.style.display = '';
+    info.style.display = '';
+    info.textContent = 'A message is currently live on all branches. Sending a new one below will replace it — both stay in the Announcement Center history.';
+  } else {
+    clearBtn.style.display = 'none';
+    info.style.display = 'none';
+  }
+}
+
+function openAnnounceModal() {
+  document.getElementById('announce-msg-input').value = _currentAnnouncement?.message || '';
+  renderAnnounceModalState();
+  document.getElementById('announce-modal').style.display = 'flex';
+}
+
+function closeAnnounceModal() {
+  document.getElementById('announce-modal').style.display = 'none';
+}
+
+async function sendAnnouncement() {
+  const msg = document.getElementById('announce-msg-input').value.trim();
+  if (!msg) { showToast('Type a message first.', 'error'); return; }
+  // TEMP DEBUG — remove after confirming the UID matches Firestore users/{uid}
+  console.log('[DEBUG] auth.currentUser.uid =', firebase.auth().currentUser?.uid);
+  console.log('[DEBUG] auth.currentUser.email =', firebase.auth().currentUser?.email);
+  try {
+    const userDoc = await db.collection('users').doc(firebase.auth().currentUser.uid).get();
+    console.log('[DEBUG] users/{uid} exists?', userDoc.exists, '| data:', userDoc.data());
+  } catch (dbgErr) {
+    console.log('[DEBUG] users/{uid} lookup itself failed:', dbgErr.message);
+  }
+  try {
+    await db.collection('system').doc('announcement').set({
+      message: msg,
+      active: true,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser?.email || 'admin'
+    });
+    // Append to the permanent history feed — this is what makes
+    // consecutive announcements & future updates all reviewable later.
+    await db.collection('announcements').add({
+      message: msg,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: currentUser?.email || 'admin'
+    });
+    showToast('Announcement broadcast to all branches!', 'success');
+    closeAnnounceModal();
+    loadAnnouncementHistory();
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to send: ' + e.message, 'error');
+  }
+}
+
+async function clearAnnouncement() {
+  try {
+    await db.collection('system').doc('announcement').set({ active: false }, { merge: true });
+    showToast('Live banner cleared for all branches. It stays in Announcement Center history.', 'success');
+    closeAnnounceModal();
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to clear: ' + e.message, 'error');
+  }
+}
+
+// ── ANNOUNCEMENT CENTER (history feed) ──
+async function loadAnnouncementHistory() {
+  const list = document.getElementById('announce-history-list');
+  try {
+    const snap = await db.collection('announcements').orderBy('createdAt','desc').limit(100).get();
+    announceHistoryData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAnnouncementHistory();
+  } catch(e) {
+    console.error('loadAnnouncementHistory:', e);
+    if (list) list.innerHTML = `<div class="empty-state" style="padding:28px"><div class="empty-icon">📢</div><h3>Couldn't load history</h3></div>`;
+  }
+}
+
+function renderAnnouncementHistory() {
+  const list = document.getElementById('announce-history-list');
+  if (!list) return;
+  if (!announceHistoryData.length) {
+    list.innerHTML = `<div class="empty-state" style="padding:40px"><div class="empty-icon">📢</div><h3>No announcements yet</h3><p style="font-size:14.5px;color:var(--text-muted);margin-top:4px">Click "New Announcement" to broadcast to all branches</p></div>`;
+    return;
+  }
+  const liveMsg = _currentAnnouncement?.message;
+  list.innerHTML = announceHistoryData.map(a => {
+    const isLive = liveMsg && a.message === liveMsg;
+    const when = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Just now';
+    return `<div class="announce-feed-item ${isLive?'is-live':''}">
+      <div class="announce-feed-icon">📢</div>
+      <div class="announce-feed-body">
+        <div class="announce-feed-msg">${escHtml(a.message)}</div>
+        <div class="announce-feed-meta">
+          <span>${when}</span>
+          <span>· sent by ${escHtml(a.createdBy||'admin')}</span>
+          ${isLive?'<span class="announce-feed-badge">Live now</span>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── NAV ──
+function showSection(name) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-section="${name}"]`)?.classList.add('active');
+
+  // Hide all sections
+  document.getElementById('section-dashboard').style.display = 'none';
+  document.getElementById('section-branch').style.display = 'none';
+  document.getElementById('section-orders').style.display = 'none';
+  document.getElementById('section-revenue').style.display = 'none';
+  document.getElementById('section-prices').style.display = 'none';
+  document.getElementById('section-reports').style.display = 'none';
+  document.getElementById('section-trash').style.display = 'none';
+  document.getElementById('section-settings').style.display = 'none';
+  document.getElementById('section-employees').style.display = 'none';
+  document.getElementById('section-announcements').style.display = 'none';
+
+  const titles = {
+    'dashboard':'Dashboard', 'orders':'All Orders', 'revenue':'Revenue Analytics',
+    'prices':'Price Management', 'reports':'Reports & Print', 'trash':'Trash', 'settings':'Settings',
+    'employees':'Employees', 'announcements':'Announcement Center',
+    'branch-ubujan':'Ubujan Branch', 'branch-taloto':'Taloto Branch',
+    'branch-bingag':'Bingag Branch', 'branch-catarman':'Catarman Branch'
+  };
+  document.getElementById('page-title').textContent = titles[name] || 'Dashboard';
+
+  if (name === 'dashboard') {
+    document.getElementById('section-dashboard').style.display = '';
+  } else if (name.startsWith('branch-')) {
+    const bId = name.replace('branch-','');
+    currentBranchSection = bId;
+    document.getElementById('section-branch').style.display = '';
+    loadBranchDetail(bId);
+  } else if (name === 'orders') {
+    document.getElementById('section-orders').style.display = '';
+    loadAllOrders();
+  } else if (name === 'revenue') {
+    document.getElementById('section-revenue').style.display = '';
+    loadRevenueSection();
+  } else if (name === 'prices') {
+    document.getElementById('section-prices').style.display = '';
+  } else if (name === 'reports') {
+    document.getElementById('section-reports').style.display = '';
+    loadReportData();
+  } else if (name === 'trash') {
+    document.getElementById('section-trash').style.display = '';
+    loadAllTrash();
+  } else if (name === 'settings') {
+    document.getElementById('section-settings').style.display = '';
+    syncThemeUI();
+  } else if (name === 'employees') {
+    document.getElementById('section-employees').style.display = '';
+    loadAllEmployees();
+    loadEmployeeLoginActivity();
+  } else if (name === 'announcements') {
+    document.getElementById('section-announcements').style.display = '';
+    loadAnnouncementHistory();
+  }
+  closeMobileSidebar();
+}
+
+// ── MOBILE ──
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+// ── THEME (Settings → Appearance) ──
+// Saved to localStorage so it's remembered on this device/browser,
+// and shared across admin.html + index.html since they're same-origin.
+function setTheme(theme) {
+  theme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('ds-theme', theme); } catch(e) {}
+  syncThemeUI();
+}
+function syncThemeUI() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  document.getElementById('theme-opt-light')?.classList.toggle('active', current==='light');
+  document.getElementById('theme-opt-dark')?.classList.toggle('active', current==='dark');
+}
+
+// ── HELPERS ──
+function peso(n) { return '₱' + Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(ts) { if (!ts) return '—'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtDateTime(ts) { if (!ts) return '—'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
+function statusBadge(s) { const m = {'pending':'badge-pending','washing':'badge-washing','ready':'badge-ready','done':'badge-done'}; return `<span class="badge ${m[s]||'badge-done'}">${s||'—'}</span>`; }
+
+// ─────────────────────────────────────────
+//  SOFT DELETE / TRASH (RECYCLE BIN) — admin
+//  Deleting an order or service never destroys
+//  the record — it is moved to that branch's
+//  "trash" collection and can be restored from
+//  the Trash page.
+// ─────────────────────────────────────────
+async function adminSoftDelete(branchId, collectionName, docId, label) {
+  try {
+    const ref = branchCol(branchId, collectionName).doc(docId);
+    const snap = await ref.get();
+    if (!snap.exists) { showToast('Item not found', 'error'); return false; }
+    const data = snap.data();
+    await branchCol(branchId, 'trash').doc(`${collectionName}_${docId}`).set({
+      originalCollection: collectionName,
+      originalId: docId,
+      data: data,
+      label: label,
+      deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await ref.delete();
+    return true;
+  } catch(e) { console.error('adminSoftDelete:', e); showToast('Error deleting item', 'error'); return false; }
+}
+
+let allTrashData = [];
+async function loadAllTrash() {
+  try {
+    const snaps = await Promise.all(DS_BRANCHES.map(b => branchCol(b.id, 'trash').orderBy('deletedAt','desc').get()));
+    allTrashData = [];
+    snaps.forEach((snap, i) => {
+      snap.docs.forEach(d => allTrashData.push({ id: d.id, _branch: DS_BRANCHES[i], ...d.data() }));
+    });
+    allTrashData.sort((a,b)=>(b.deletedAt?.toDate?.()?.getTime()||0)-(a.deletedAt?.toDate?.()?.getTime()||0));
+    const badge = document.getElementById('nav-trash-count');
+    if (badge) { badge.style.display = allTrashData.length ? '' : 'none'; badge.textContent = allTrashData.length; }
+    renderAdminTrash();
+  } catch(e) { console.error('loadAllTrash:', e); showToast('Error loading trash', 'error'); }
+}
+
+function renderAdminTrash() {
+  const tbody = document.getElementById('trash-tbody');
+  if (!tbody) return;
+  if (!allTrashData.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🗑️</div><h3>Trash is empty</h3></div></td></tr>';
+    return;
+  }
+  const typeLabels = {orders:'Order', employees:'Employee', services:'Service', addons:'Add-on', expenses:'Expense', customers:'Customer'};
+  tbody.innerHTML = allTrashData.map(t => `<tr>
+    <td><span class="branch-pill ${t._branch.id}" style="padding:2px 8px;font-size:11.5px">${t._branch.name}</span></td>
+    <td><span class="badge" style="background:#EFF6FF;color:#1B6FD8">${escHtml(typeLabels[t.originalCollection]||t.originalCollection||'Item')}</span></td>
+    <td style="font-weight:600">${escHtml(t.label||'—')}</td>
+    <td style="font-size:14px;color:var(--text-muted)">${fmtDateTime(t.deletedAt)}</td>
+    <td style="text-align:right"><div style="display:flex;gap:6px;justify-content:flex-end">
+      <button class="btn-secondary" style="padding:5px 12px;font-size:13.5px" onclick="restoreAdminTrashItem('${t._branch.id}','${t.id}')">↩ Restore</button>
+      <button class="btn-danger" style="padding:5px 12px;font-size:13.5px" onclick="permanentlyDeleteAdminTrashItem('${t._branch.id}','${t.id}','${escHtml(t.label||'this item')}')">Delete Forever</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+async function restoreAdminTrashItem(branchId, trashId) {
+  try {
+    const tRef = branchCol(branchId, 'trash').doc(trashId);
+    const tSnap = await tRef.get();
+    if (!tSnap.exists) { showToast('Trash item not found', 'error'); return; }
+    const t = tSnap.data();
+    await branchCol(branchId, t.originalCollection).doc(t.originalId).set(t.data);
+    await tRef.delete();
+    showToast(`${t.label||'Item'} restored`, 'success');
+    loadAllTrash();
+    refreshData();
+  } catch(e) { console.error('restoreAdminTrashItem:', e); showToast('Error restoring item', 'error'); }
+}
+
+async function permanentlyDeleteAdminTrashItem(branchId, trashId, label) {
+  if (!confirm(`Permanently delete "${label}"? This cannot be undone.`)) return;
+  try {
+    await branchCol(branchId, 'trash').doc(trashId).delete();
+    showToast(`${label} permanently deleted`, 'info');
+    loadAllTrash();
+  } catch(e) { console.error(e); showToast('Error deleting item', 'error'); }
+}
+
+async function emptyAllTrashPrompt() {
+  if (!allTrashData.length) { showToast('Trash is already empty', 'info'); return; }
+  if (!confirm(`Permanently delete all ${allTrashData.length} item(s) in Trash across every branch? This cannot be undone.`)) return;
+  try {
+    const byBranch = {};
+    allTrashData.forEach(t => { (byBranch[t._branch.id] = byBranch[t._branch.id]||[]).push(t.id); });
+    for (const bId of Object.keys(byBranch)) {
+      const batch = db.batch();
+      byBranch[bId].forEach(id => batch.delete(branchCol(bId, 'trash').doc(id)));
+      await batch.commit();
+    }
+    showToast('Trash emptied', 'info');
+    loadAllTrash();
+  } catch(e) { console.error(e); showToast('Error emptying trash', 'error'); }
+}
+function payBadge(paid) { return paid ? '<span class="badge badge-paid">Paid</span>' : '<span class="badge badge-unpaid">Unpaid</span>'; }
+function avatarHtml(name, size=30) { const c=['#1B6FD8','#7C3AED','#D97706','#C0311A','#16A34A','#0891B2']; const idx=name.charCodeAt(0)%c.length; return `<div class="avatar-square" style="width:${size}px;height:${size}px;background:${c[idx]};flex-shrink:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:${size*.4}px;color:#fff;font-weight:800">${name.charAt(0).toUpperCase()}</div>`; }
+
+// ── DASHBOARD LOAD ──
+async function loadDashboard() {
+  try {
+    let totalOrders = 0, totalCustomers = 0, totalActive = 0, totalUnpaid = 0;
+    let totalCollected = 0, totalPending = 0;
+    allOrdersData = [];
+
+    for (const branch of DS_BRANCHES) {
+      const [ordSnap, custSnap] = await Promise.all([
+        branchCol(branch.id,'orders').get(),
+        branchCol(branch.id,'customers').get()
+      ]);
+      const orders = ordSnap.docs.map(d=>({id:d.id,...d.data(),_branch:branch}));
+      const customers = custSnap.docs.map(d=>({id:d.id,...d.data()}));
+      allOrdersData = allOrdersData.concat(orders);
+
+      const active  = orders.filter(o=>['pending','washing'].includes(o.status)).length;
+      const ready   = orders.filter(o=>o.status==='ready').length;
+      const done    = orders.filter(o=>o.status==='done').length;
+      const unpaid  = orders.filter(o=>!o.isPaid).length;
+      const collected = orders.filter(o=>o.isPaid).reduce((s,o)=>s+(o.amount||0),0);
+      const pending   = orders.filter(o=>!o.isPaid).reduce((s,o)=>s+(o.amount||0),0);
+
+      branchData[branch.id] = { orders, customers, active, ready, done, unpaid, collected, pending };
+      totalOrders    += orders.length;
+      totalCustomers += customers.length;
+      totalActive    += active;
+      totalUnpaid    += unpaid;
+      totalCollected += collected;
+      totalPending   += pending;
+    }
+
+    document.getElementById('stat-orders').textContent    = totalOrders;
+    document.getElementById('stat-customers').textContent = totalCustomers;
+    document.getElementById('stat-active').textContent    = totalActive;
+    document.getElementById('stat-unpaid').textContent    = totalUnpaid;
+    document.getElementById('hero-rev-total').textContent   = peso(totalCollected);
+    document.getElementById('hero-rev-pending').textContent = peso(totalPending);
+
+    renderBranchCards();
+    renderComparison(totalCollected);
+    renderBreakdown();
+    renderRecentOrders();
+    setDate();
+  } catch(e) { console.error(e); showToast('Error loading dashboard', 'error'); }
+}
+
+function renderBranchCards() {
+  const grid = document.getElementById('branches-grid');
+  grid.innerHTML = DS_BRANCHES.map(b => {
+    const d = branchData[b.id] || {};
+    const orders = d.orders||[];
+    return `<div class="branch-card">
+      <div class="branch-card-header ${b.id}">
+        <span class="branch-pill ${b.id}">📍 ${b.name}</span>
+        <div style="display:flex;align-items:center;gap:6px"><span class="branch-status-dot"></span><span style="font-size:13px;color:var(--text-muted);font-weight:600">Live</span></div>
+      </div>
+      <div class="branch-stats">
+        <div class="branch-stat"><div class="branch-stat-label">Total Orders</div><div class="branch-stat-value">${orders.length}</div><div class="branch-stat-sub">All time</div></div>
+        <div class="branch-stat"><div class="branch-stat-label">Active</div><div class="branch-stat-value" style="color:#D97706">${d.active||0}</div><div class="branch-stat-sub">In progress</div></div>
+        <div class="branch-stat"><div class="branch-stat-label">Customers</div><div class="branch-stat-value">${(d.customers||[]).length}</div><div class="branch-stat-sub">Registered</div></div>
+        <div class="branch-stat"><div class="branch-stat-label">Ready Pickup</div><div class="branch-stat-value" style="color:#16A34A">${d.ready||0}</div><div class="branch-stat-sub">${(d.ready||0)>0?'⚠️ Notify now':'All clear'}</div></div>
+      </div>
+      <div class="branch-card-footer">
+        <div><div class="branch-revenue-label">Revenue Collected</div><div class="branch-revenue ${b.id}">${peso(d.collected||0)}</div></div>
+        <div style="text-align:right"><div class="branch-revenue-label">Pending</div><div style="font-family:'Fira Code',monospace;font-size:15.5px;font-weight:700;color:#D97706">${peso(d.pending||0)}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderComparison(totalCollected) {
+  const body = document.getElementById('comparison-body');
+  body.innerHTML = DS_BRANCHES.map(b => {
+    const d = branchData[b.id] || {};
+    const amt = d.collected||0;
+    const pct = totalCollected > 0 ? Math.round((amt/totalCollected)*100) : 0;
+    return `<div class="comp-row">
+      <div class="comp-label"><span class="comp-dot" style="background:${b.color}"></span>${b.name}</div>
+      <div class="comp-track"><div class="comp-fill ${b.id}" style="width:${pct}%"></div></div>
+      <div><div class="comp-amount ${b.id}">${peso(amt)}</div><div class="comp-pct">${pct}%</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderBreakdown() {
+  const body = document.getElementById('breakdown-body');
+  body.innerHTML = DS_BRANCHES.map(b => {
+    const d = branchData[b.id]||{};
+    return `<div style="padding:14px 0 0;border-bottom:1px solid var(--border);margin:0 20px">
+      <div style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:${b.color};margin-bottom:4px">${b.name}</div>
+    </div>
+    <div class="bk-row"><span class="bk-label">Total Orders</span><span class="bk-val">${(d.orders||[]).length}</span></div>
+    <div class="bk-row"><span class="bk-label">Active</span><span class="bk-val" style="color:#D97706">${d.active||0}</span></div>
+    <div class="bk-row"><span class="bk-label">Revenue</span><span class="bk-val" style="color:#16A34A">${peso(d.collected||0)}</span></div>`;
+  }).join('');
+}
+
+function renderRecentOrders() {
+  const tbody = document.getElementById('recent-tbody');
+  const recent = [...allOrdersData].sort((a,b)=>{ const ta = a.createdAt?.toDate?.()?.getTime()||0; const tb = b.createdAt?.toDate?.()?.getTime()||0; return tb-ta; }).slice(0,20);
+  if (!recent.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3></div></td></tr>`; return; }
+  tbody.innerHTML = recent.map(o => {
+    const b = o._branch;
+    const cust = (branchData[b.id]?.customers||[]).find(c=>c.id===o.customerId);
+    const name = cust?.name || o.customerName || '—';
+    return `<tr>
+      <td><span class="branch-pill ${b.id}" style="padding:3px 9px;font-size:12px">${b.name}</span></td>
+      <td><span class="order-id">${escHtml(o.orderId||'—')}</span></td>
+      <td><div class="customer-cell">${avatarHtml(name,26)}<span class="customer-name">${escHtml(name)}</span></div></td>
+      <td style="color:var(--text-muted);font-size:14.5px">${escHtml(o.service||'—')}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td><span class="amount">${peso(o.amount)}</span></td>
+      <td style="font-size:14px;color:var(--text-muted)">${fmtDate(o.createdAt)}</td>
+      <td><button style="padding:4px 10px;font-size:13px;border:1px solid #FECACA;background:#FEF2F2;color:#DC2626;border-radius:6px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700" onclick="deleteAdminOrder('${b.id}','${o.id}','${escHtml(o.orderId||o.id)}')">🗑 Delete</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── BRANCH DETAIL ──
+function loadBranchDetail(bId) {
+  const b = DS_BRANCHES.find(x=>x.id===bId);
+  if (!b) return;
+  document.getElementById('branch-detail-title').textContent = b.name + ' — Orders';
+  const d = branchData[bId]||{};
+  const orders = d.orders||[];
+  document.getElementById('branch-detail-sub').textContent = `${orders.length} total orders`;
+
+  document.getElementById('branch-stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">📋</div><div class="stat-label">Total Orders</div><div class="stat-value">${orders.length}</div></div>
+    <div class="stat-card"><div class="stat-icon gold">⏳</div><div class="stat-label">Active</div><div class="stat-value" style="color:#D97706">${d.active||0}</div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-label">Ready Pickup</div><div class="stat-value" style="color:#16A34A">${d.ready||0}</div></div>
+    <div class="stat-card"><div class="stat-icon blue">💵</div><div class="stat-label">Revenue</div><div class="stat-value">${peso(d.collected||0)}</div></div>
+  `;
+
+  const tbody = document.getElementById('branch-tbody');
+  if (!orders.length) { tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📋</div><h3>No orders</h3></div></td></tr>`; return; }
+  tbody.innerHTML = [...orders].sort((a,b)=>(b.createdAt?.toDate?.()?.getTime()||0)-(a.createdAt?.toDate?.()?.getTime()||0)).map(o=>{
+    const cust=(d.customers||[]).find(c=>c.id===o.customerId);
+    const name=cust?.name||o.customerName||'—';
+    return `<tr>
+      <td><span class="order-id">${escHtml(o.orderId||'—')}</span></td>
+      <td><div class="customer-cell">${avatarHtml(name,26)}<span class="customer-name">${escHtml(name)}</span></div></td>
+      <td style="font-size:14.5px;color:var(--text-muted)">${escHtml(o.service||'—')}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${payBadge(o.isPaid)}</td>
+      <td><span class="amount">${peso(o.amount)}</span></td>
+      <td style="font-size:14px;color:var(--text-muted)">${fmtDate(o.createdAt)}</td>
+      <td>${outDateCell(o)}</td>
+      <td><button style="padding:4px 10px;font-size:13px;border:1px solid #FECACA;background:#FEF2F2;color:#DC2626;border-radius:6px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700" onclick="deleteAdminOrder('${bId}','${o.id}','${escHtml(o.orderId||o.id)}')">🗑 Delete</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ALL ORDERS ──
+function loadAllOrders() {
+  filterOrders();
+}
+function filterOrders() {
+  const bFilter = document.getElementById('filter-branch').value;
+  const sFilter = document.getElementById('filter-status').value;
+  let data = [...allOrdersData];
+  if (bFilter) data = data.filter(o=>o._branch.id===bFilter);
+  if (sFilter) data = data.filter(o=>o.status===sFilter);
+  data.sort((a,b)=>(b.createdAt?.toDate?.()?.getTime()||0)-(a.createdAt?.toDate?.()?.getTime()||0));
+  const tbody = document.getElementById('all-orders-tbody');
+  if (!data.length) { tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔍</div><h3>No orders found</h3></div></td></tr>`; return; }
+  tbody.innerHTML = data.map(o=>{
+    const cust=(branchData[o._branch.id]?.customers||[]).find(c=>c.id===o.customerId);
+    const name=cust?.name||o.customerName||'—';
+    return `<tr>
+      <td><span class="branch-pill ${o._branch.id}" style="padding:3px 9px;font-size:12px">${o._branch.name}</span></td>
+      <td><span class="order-id">${escHtml(o.orderId||'—')}</span></td>
+      <td><div class="customer-cell">${avatarHtml(name,25)}<div><span class="customer-name">${escHtml(name)}</span>${o.createdByEmployeeName?`<div style="font-size:12px;color:var(--text-muted);font-weight:500">🧑‍💼 ${escHtml(o.createdByEmployeeName)}</div>`:''}</div></div></td>
+      <td style="font-size:14.5px">${escHtml(o.service||'—')}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${payBadge(o.isPaid)}</td>
+      <td><span class="amount">${peso(o.amount)}</span></td>
+      <td style="font-size:14px;color:var(--text-muted)">${fmtDate(o.createdAt)}</td>
+      <td>${outDateCell(o)}</td>
+      <td><button style="padding:4px 10px;font-size:13px;border:1px solid #FECACA;background:#FEF2F2;color:#DC2626;border-radius:6px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700" onclick="deleteAdminOrder('${o._branch.id}','${o.id}','${escHtml(o.orderId||o.id)}')">🗑 Delete</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── REVENUE ──
+function loadRevenueSection() {
+  let tc=0,tp=0,today=0; const now=new Date(); const todayStr=now.toDateString();
+  allOrdersData.forEach(o=>{
+    const a=o.amount||0;
+    if(o.isPaid) tc+=a; else tp+=a;
+    if(o.createdAt?.toDate?.()?.toDateString()===todayStr) today+=a;
+  });
+  const avg = allOrdersData.length?tc/allOrdersData.length:0;
+  document.getElementById('rev-total-collected').textContent=peso(tc);
+  document.getElementById('rev-total-pending').textContent=peso(tp);
+  document.getElementById('rev-today').textContent=peso(today);
+  document.getElementById('rev-avg').textContent=peso(avg);
+
+  document.getElementById('revenue-breakdown').innerHTML = DS_BRANCHES.map(b=>{
+    const d=branchData[b.id]||{};
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="branch-pill ${b.id}" style="padding:4px 12px;font-size:13px">${b.name}</span>
+      </div>
+      <div style="display:flex;gap:40px">
+        <div style="text-align:right"><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Collected</div><div style="font-size:18px;font-weight:800;color:#16A34A">${peso(d.collected||0)}</div></div>
+        <div style="text-align:right"><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Pending</div><div style="font-size:18px;font-weight:800;color:#D97706">${peso(d.pending||0)}</div></div>
+        <div style="text-align:right"><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Orders</div><div style="font-size:18px;font-weight:800;color:var(--text)">${(d.orders||[]).length}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── PRICE MANAGEMENT ──
+function loadPriceManagement() {
+  const container = document.getElementById('prices-content');
+  let html = '';
+  DS_BRANCHES.forEach(b => {
+    html += `<div class="price-card" style="margin-bottom:20px">
+      <div class="price-header">
+        <div><span class="branch-pill ${b.id}" style="padding:5px 14px;font-size:14px">📍 ${b.name}</span></div>
+        <button class="btn-primary" style="font-size:14px;padding:6px 14px" onclick="openAddServiceModal('${b.id}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Service
+        </button>
+      </div>
+      <div id="price-table-${b.id}"><div style="padding:20px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+
+      <div class="price-header" style="border-top:1px solid var(--border);margin-top:4px">
+        <div style="font-size:15px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em">Add-ons</div>
+        <button class="btn-secondary" style="font-size:14px;padding:6px 14px" onclick="openAddAddonModal('${b.id}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Add-on
+        </button>
+      </div>
+      <div id="addon-table-${b.id}"><div style="padding:20px;text-align:center;color:var(--text-muted)"><span class="spinner"></span> Loading...</div></div>
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  // Load real-time listeners for each branch
+  DS_BRANCHES.forEach(b => { loadBranchPrices(b); loadBranchAddons(b); });
+}
+
+function loadBranchPrices(branch) {
+  if (priceListeners[branch.id]) priceListeners[branch.id]();
+  const unsub = branchCol(branch.id,'services').orderBy('order','asc').onSnapshot(snap => {
+    const services = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderPriceTable(branch, services);
+  }, err => console.error(err));
+  priceListeners[branch.id] = unsub;
+}
+
+function loadBranchAddons(branch) {
+  if (addonListeners[branch.id]) addonListeners[branch.id]();
+  const unsub = branchCol(branch.id,'addons').orderBy('order','asc').onSnapshot(snap => {
+    const addons = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAddonTable(branch, addons);
+  }, err => console.error(err));
+  addonListeners[branch.id] = unsub;
+}
+
+function renderPriceTable(branch, services) {
+  const el = document.getElementById(`price-table-${branch.id}`);
+  if (!el) return;
+  if (!services.length) { el.innerHTML=`<div class="empty-state" style="padding:24px"><div class="empty-icon">💰</div><h3>No services yet</h3></div>`; return; }
+  el.innerHTML = `<div style="overflow-x:auto"><table class="data-table">
+    <thead><tr><th>Service Name</th><th>Price</th><th>Duration</th><th>Actions</th></tr></thead>
+    <tbody>${services.map(s=>`<tr>
+      <td><strong>${escHtml(s.name)}</strong></td>
+      <td><span style="font-family:'Fira Code',monospace;font-size:15.5px;font-weight:700;color:var(--primary)">${peso(s.price)}</span></td>
+      <td><span style="color:var(--text-muted);font-size:15px">${escHtml(s.duration||'—')}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-secondary" style="padding:5px 12px;font-size:14px" onclick="openEditPriceModal('${branch.id}','${s.id}','${escHtml(s.name)}',${s.price},'${escHtml(s.duration||'')}')">Edit</button>
+        <button class="btn-danger" style="padding:5px 12px;font-size:14px" onclick="deleteService('${branch.id}','${s.id}','${escHtml(s.name)}')">Delete</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderAddonTable(branch, addons) {
+  const el = document.getElementById(`addon-table-${branch.id}`);
+  if (!el) return;
+  if (!addons.length) { el.innerHTML=`<div class="empty-state" style="padding:24px"><div class="empty-icon">🧴</div><h3>No add-ons yet</h3></div>`; return; }
+  el.innerHTML = `<div style="overflow-x:auto"><table class="data-table">
+    <thead><tr><th>Add-on Name</th><th>Price</th><th>Actions</th></tr></thead>
+    <tbody>${addons.map(a=>`<tr>
+      <td><strong>${escHtml(a.name)}</strong></td>
+      <td><span style="font-family:'Fira Code',monospace;font-size:15.5px;font-weight:700;color:var(--primary)">${peso(a.price)}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-secondary" style="padding:5px 12px;font-size:14px" onclick="openEditAddonModal('${branch.id}','${a.id}','${escHtml(a.name)}',${a.price})">Edit</button>
+        <button class="btn-danger" style="padding:5px 12px;font-size:14px" onclick="deleteAddon('${branch.id}','${a.id}','${escHtml(a.name)}')">Delete</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ── ADD SERVICE ──
+function openAddServiceModal(prefillBranch) {
+  if (prefillBranch) document.getElementById('new-svc-branch').value = prefillBranch;
+  document.getElementById('new-svc-name').value = '';
+  document.getElementById('new-svc-price').value = '';
+  document.getElementById('new-svc-duration').value = '';
+  document.getElementById('add-service-modal').style.display = 'flex';
+}
+function closeAddServiceModal() { document.getElementById('add-service-modal').style.display = 'none'; }
+
+async function addNewService() {
+  const branchSel = document.getElementById('new-svc-branch').value;
+  const name      = document.getElementById('new-svc-name').value.trim();
+  const price     = parseFloat(document.getElementById('new-svc-price').value);
+  const duration  = document.getElementById('new-svc-duration').value.trim();
+
+  if (!name)           { showToast('Service name is required','error'); return; }
+  if (isNaN(price)||price<0) { showToast('Please enter a valid price','error'); return; }
+
+  const svcData = { name, price, duration: duration||'—', order: Date.now() };
+  const targets = branchSel === 'all' ? DS_BRANCHES.map(b=>b.id) : [branchSel];
+
+  try {
+    for (const bId of targets) {
+      const ref = await branchCol(bId,'services').add(svcData);
+      // Log to price history (does NOT modify the service doc itself — separate subcollection)
+      await db.collection('branches').doc(bId).collection('priceHistory').add({
+        itemType: 'service', itemId: ref.id, itemName: name, serviceName: name, oldPrice: null, newPrice: price, changeType: 'created',
+        changedBy: currentUser?.email||'Admin',
+        changedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    closeAddServiceModal();
+    showToast(`Service "${name}" added successfully!`, 'success');
+    loadPriceHistory();
+  } catch(e) { console.error(e); showToast('Error adding service','error'); }
+}
+
+// ── EDIT PRICE ──
+function openEditPriceModal(branchId, serviceId, name, price, duration) {
+  editServiceContext = { branchId, serviceId, name, oldPrice: price };
+  document.getElementById('edit-svc-info').innerHTML = `<strong>${name}</strong> — <span class="branch-pill ${branchId}" style="padding:2px 8px;font-size:12px">${DS_BRANCHES.find(b=>b.id===branchId)?.name||branchId}</span><br><span style="margin-top:4px;display:block">Current price: <strong>${peso(price)}</strong></span>`;
+  document.getElementById('edit-svc-price').value    = price;
+  document.getElementById('edit-svc-duration').value = duration||'';
+  document.getElementById('edit-price-modal').style.display = 'flex';
+}
+function closeEditPriceModal() { document.getElementById('edit-price-modal').style.display = 'none'; editServiceContext = null; }
+
+async function saveEditedPrice() {
+  if (!editServiceContext) return;
+  const { branchId, serviceId, name, oldPrice } = editServiceContext;
+  const newPrice  = parseFloat(document.getElementById('edit-svc-price').value);
+  const newDur    = document.getElementById('edit-svc-duration').value.trim();
+
+  if (isNaN(newPrice)||newPrice<0) { showToast('Invalid price','error'); return; }
+
+  try {
+    // Only the price/duration fields on the existing doc are updated — the old value
+    // is never overwritten in place, it's preserved as its own entry in priceHistory below.
+    await branchCol(branchId,'services').doc(serviceId).update({ price: newPrice, duration: newDur||'—' });
+    if (newPrice !== oldPrice) {
+      await db.collection('branches').doc(branchId).collection('priceHistory').add({
+        itemType: 'service', itemId: serviceId, itemName: name, serviceName: name, oldPrice, newPrice, changeType: 'updated',
+        changedBy: currentUser?.email||'Admin',
+        changedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    closeEditPriceModal();
+    showToast(`Price updated to ${peso(newPrice)}`, 'success');
+    loadPriceHistory();
+  } catch(e) { console.error(e); showToast('Error updating price','error'); }
+}
+
+// ── DELETE SERVICE ──
+async function deleteService(branchId, serviceId, name) {
+  if (!confirm(`Delete service "${name}" from ${branchId}? It will be moved to Trash and can be restored later.`)) return;
+  const ok = await adminSoftDelete(branchId, 'services', serviceId, name);
+  if (!ok) return;
+  try {
+    await db.collection('branches').doc(branchId).collection('priceHistory').add({
+      itemType: 'service', itemId: serviceId, itemName: name, serviceName: name, oldPrice: null, newPrice: null, changeType: 'deleted',
+      changedBy: currentUser?.email||'Admin',
+      changedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast(`Service "${name}" moved to Trash`, 'info');
+    loadPriceHistory();
+  } catch(e) { console.error(e); showToast('Error deleting service','error'); }
+}
+
+// ── ADD-ON MANAGEMENT (mirrors Service management above) ──
+function openAddAddonModal(prefillBranch) {
+  if (prefillBranch) document.getElementById('new-addon-branch').value = prefillBranch;
+  document.getElementById('new-addon-name').value = '';
+  document.getElementById('new-addon-price').value = '';
+  document.getElementById('add-addon-modal').style.display = 'flex';
+}
+function closeAddAddonModal() { document.getElementById('add-addon-modal').style.display = 'none'; }
+
+async function addNewAddon() {
+  const branchSel = document.getElementById('new-addon-branch').value;
+  const name      = document.getElementById('new-addon-name').value.trim();
+  const price     = parseFloat(document.getElementById('new-addon-price').value);
+
+  if (!name)                 { showToast('Add-on name is required','error'); return; }
+  if (isNaN(price)||price<0) { showToast('Please enter a valid price','error'); return; }
+
+  const addonData = { name, price, order: Date.now() };
+  const targets = branchSel === 'all' ? DS_BRANCHES.map(b=>b.id) : [branchSel];
+
+  try {
+    for (const bId of targets) {
+      const ref = await branchCol(bId,'addons').add(addonData);
+      await db.collection('branches').doc(bId).collection('priceHistory').add({
+        itemType: 'addon', itemId: ref.id, itemName: name, oldPrice: null, newPrice: price, changeType: 'created',
+        changedBy: currentUser?.email||'Admin',
+        changedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    closeAddAddonModal();
+    showToast(`Add-on "${name}" added successfully!`, 'success');
+    loadPriceHistory();
+  } catch(e) { console.error(e); showToast('Error adding add-on','error'); }
+}
+
+function openEditAddonModal(branchId, addonId, name, price) {
+  editAddonContext = { branchId, addonId, name, oldPrice: price };
+  document.getElementById('edit-addon-info').innerHTML = `<strong>${name}</strong> — <span class="branch-pill ${branchId}" style="padding:2px 8px;font-size:12px">${DS_BRANCHES.find(b=>b.id===branchId)?.name||branchId}</span><br><span style="margin-top:4px;display:block">Current price: <strong>${peso(price)}</strong></span>`;
+  document.getElementById('edit-addon-price').value = price;
+  document.getElementById('edit-addon-modal').style.display = 'flex';
+}
+function closeEditAddonModal() { document.getElementById('edit-addon-modal').style.display = 'none'; editAddonContext = null; }
+
+async function saveEditedAddonPrice() {
+  if (!editAddonContext) return;
+  const { branchId, addonId, name, oldPrice } = editAddonContext;
+  const newPrice = parseFloat(document.getElementById('edit-addon-price').value);
+
+  if (isNaN(newPrice)||newPrice<0) { showToast('Invalid price','error'); return; }
+
+  try {
+    // Existing addon doc is only updated in place; the prior price is preserved as its own priceHistory entry
+    await branchCol(branchId,'addons').doc(addonId).update({ price: newPrice });
+    if (newPrice !== oldPrice) {
+      await db.collection('branches').doc(branchId).collection('priceHistory').add({
+        itemType: 'addon', itemId: addonId, itemName: name, oldPrice, newPrice, changeType: 'updated',
+        changedBy: currentUser?.email||'Admin',
+        changedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    closeEditAddonModal();
+    showToast(`Price updated to ${peso(newPrice)}`, 'success');
+    loadPriceHistory();
+  } catch(e) { console.error(e); showToast('Error updating price','error'); }
+}
+
+async function deleteAddon(branchId, addonId, name) {
+  if (!confirm(`Delete add-on "${name}" from ${branchId}? It will be moved to Trash and can be restored later.`)) return;
+  const ok = await adminSoftDelete(branchId, 'addons', addonId, name);
+  if (!ok) return;
+  try {
+    await db.collection('branches').doc(branchId).collection('priceHistory').add({
+      itemType: 'addon', itemId: addonId, itemName: name, oldPrice: null, newPrice: null, changeType: 'deleted',
+      changedBy: currentUser?.email||'Admin',
+      changedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast(`Add-on "${name}" moved to Trash`, 'info');
+    loadPriceHistory();
+  } catch(e) { console.error(e); showToast('Error deleting add-on','error'); }
+}
+
+// ── PRICE HISTORY ──
+async function loadPriceHistory() {
+  const bFilter = document.getElementById('history-branch-filter')?.value || '';
+  const tbody = document.getElementById('history-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr class="loading-row"><td colspan="7"><span class="spinner"></span> Loading history...</td></tr>`;
+
+  try {
+    let allHistory = [];
+    const targets = bFilter ? [bFilter] : DS_BRANCHES.map(b=>b.id);
+    for (const bId of targets) {
+      const snap = await db.collection('branches').doc(bId).collection('priceHistory')
+        .orderBy('changedAt','desc').limit(50).get();
+      snap.docs.forEach(d => allHistory.push({id:d.id,...d.data(),_branchId:bId}));
+    }
+    allHistory.sort((a,b)=>(b.changedAt?.toDate?.()?.getTime()||0)-(a.changedAt?.toDate?.()?.getTime()||0));
+    if (!allHistory.length) { tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state" style="padding:24px"><div class="empty-icon">📜</div><h3>No history yet</h3></div></td></tr>`; return; }
+
+    tbody.innerHTML = allHistory.map(h=>{
+      const b = DS_BRANCHES.find(x=>x.id===h._branchId)||{name:h._branchId,id:h._branchId};
+      const itemType = h.itemType || 'service'; // older entries pre-date the Type field
+      const itemName = h.itemName || h.serviceName || '—';
+      const typeBadge = itemType === 'addon'
+        ? '<span class="history-badge" style="background:#EEF2FF;color:#4338CA">🧴 Add-on</span>'
+        : '<span class="history-badge" style="background:#EFF6FF;color:#1D4ED8">🧺 Service</span>';
+      let changeBadge = '';
+      if (h.changeType==='created')      changeBadge = '<span class="history-badge history-up">➕ Created</span>';
+      else if (h.changeType==='deleted') changeBadge = '<span class="history-badge history-down">🗑 Deleted</span>';
+      else if (h.newPrice > h.oldPrice)  changeBadge = `<span class="history-badge history-up">↑ +${peso(h.newPrice-h.oldPrice)}</span>`;
+      else if (h.newPrice < h.oldPrice)  changeBadge = `<span class="history-badge history-down">↓ -${peso(h.oldPrice-h.newPrice)}</span>`;
+      else changeBadge = '<span class="history-badge history-same">= Same</span>';
+      return `<tr>
+        <td><span class="branch-pill ${b.id}" style="padding:3px 9px;font-size:12px">${b.name}</span></td>
+        <td>${typeBadge}</td>
+        <td><strong>${escHtml(itemName)}</strong></td>
+        <td style="font-size:15px;color:var(--text-muted)">${h.oldPrice!=null?peso(h.oldPrice):'—'}</td>
+        <td style="font-size:15px;font-weight:700;color:var(--primary)">${h.newPrice!=null?peso(h.newPrice):'—'}</td>
+        <td>${changeBadge}</td>
+        <td style="font-size:14.5px;color:var(--text-muted)">${escHtml(h.changedBy||'—')}</td>
+        <td style="font-size:14px;color:var(--text-muted)">${fmtDate(h.changedAt)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error(e); tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--red)">Error loading history</td></tr>`; }
+}
+
+// ── REPORTS ──
+// Resolve the "report-range" select (+ custom date inputs, when shown)
+// into a concrete { start, end } Date range. Returns null for "All Time".
+function getAdminReportRange() {
+  const val = document.getElementById('report-range')?.value || 'all';
+  const now = new Date();
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  if (val === 'today') {
+    return { start: new Date(now.getFullYear(), now.getMonth(), now.getDate()), end: endOfToday, label: 'Today' };
+  }
+  if (val === 'week') {
+    const dow = now.getDay() || 7; // Sun=0 -> 7, so weeks run Mon–Sun
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow + 1);
+    return { start: monday, end: endOfToday, label: 'This Week' };
+  }
+  if (val === 'month') {
+    return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: endOfToday, label: 'This Month' };
+  }
+  if (val === 'custom') {
+    const fromVal = document.getElementById('report-custom-from')?.value;
+    const toVal   = document.getElementById('report-custom-to')?.value;
+    if (!fromVal || !toVal) return { start: null, end: null, label: 'Custom Range (pick dates)', invalid: true };
+    let [fy,fm,fd] = fromVal.split('-').map(Number);
+    let [ty,tm,td] = toVal.split('-').map(Number);
+    let start = new Date(fy, fm-1, fd);
+    let end   = new Date(ty, tm-1, td, 23, 59, 59, 999);
+    if (start > end) { const t = start; start = end; end = t; }
+    const label = `${start.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})} – ${end.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}`;
+    return { start, end, label };
+  }
+  return null; // all time
+}
+
+// Toggle the custom date inputs and refresh when the range dropdown changes
+function onReportRangeChange() {
+  const val = document.getElementById('report-range').value;
+  const wrap = document.getElementById('report-custom-range');
+  wrap.style.display = val === 'custom' ? 'flex' : 'none';
+  if (val === 'custom') {
+    const fromEl = document.getElementById('report-custom-from');
+    const toEl   = document.getElementById('report-custom-to');
+    if (!fromEl.value || !toEl.value) {
+      const now = new Date();
+      const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 6);
+      const pad = n => String(n).padStart(2,'0');
+      const toKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      fromEl.value = toKey(weekAgo);
+      toEl.value   = toKey(now);
+    }
+  }
+  loadReportData();
+}
+
+function loadReportData() {
+  const range = getAdminReportRange();
+  const sub = document.getElementById('report-range-sub');
+  if (sub) sub.textContent = `Generate printable summaries for all branches — ${range?.label || 'All Time'}`;
+
+  // Filter every branch's orders down to the selected date range once
+  const inRange = o => {
+    if (!range || range.invalid) return !range?.invalid; // no range = all time; invalid custom = show nothing yet
+    const d = o.createdAt?.toDate ? o.createdAt.toDate() : (o.createdAt ? new Date(o.createdAt) : null);
+    if (!d) return false;
+    return d >= range.start && d <= range.end;
+  };
+  const periodOrders = allOrdersData.filter(inRange);
+
+  let totalOrders=0,totalCollected=0,totalPending=0,totalCustomers=0;
+  periodOrders.forEach(o=>{ if(o.isPaid) totalCollected+=o.amount||0; else totalPending+=o.amount||0; totalOrders++; });
+  DS_BRANCHES.forEach(b=>{ totalCustomers+=(branchData[b.id]?.customers||[]).length; });
+
+  document.getElementById('rpt-orders').textContent    = totalOrders;
+  document.getElementById('rpt-collected').textContent  = peso(totalCollected);
+  document.getElementById('rpt-pending').textContent    = peso(totalPending);
+  document.getElementById('rpt-customers').textContent  = totalCustomers;
+
+  // Branch table — recomputed from the filtered orders so it respects the selected range
+  const btbody = document.getElementById('report-branch-tbody');
+  btbody.innerHTML = DS_BRANCHES.map(b=>{
+    const orders = periodOrders.filter(o=>o._branch.id===b.id);
+    const active   = orders.filter(o=>['pending','washing'].includes(o.status)).length;
+    const ready    = orders.filter(o=>o.status==='ready').length;
+    const done     = orders.filter(o=>o.status==='done').length;
+    const collected= orders.filter(o=>o.isPaid).reduce((s,o)=>s+(o.amount||0),0);
+    const pending  = orders.filter(o=>!o.isPaid).reduce((s,o)=>s+(o.amount||0),0);
+    return `<tr>
+      <td><span class="branch-pill ${b.id}" style="padding:3px 9px;font-size:12px">${b.name}</span></td>
+      <td>${orders.length}</td>
+      <td>${active}</td>
+      <td>${ready}</td>
+      <td>${done}</td>
+      <td style="color:#16A34A;font-weight:700">${peso(collected)}</td>
+      <td style="color:#D97706;font-weight:700">${peso(pending)}</td>
+    </tr>`;
+  }).join('');
+
+  // Orders table
+  const otbody = document.getElementById('report-orders-tbody');
+  const sorted = [...periodOrders].sort((a,b)=>(b.createdAt?.toDate?.()?.getTime()||0)-(a.createdAt?.toDate?.()?.getTime()||0)).slice(0,50);
+  otbody.innerHTML = sorted.length ? sorted.map(o=>{
+    const cust=(branchData[o._branch.id]?.customers||[]).find(c=>c.id===o.customerId);
+    const name=cust?.name||o.customerName||'—';
+    return `<tr>
+      <td><span class="branch-pill ${o._branch.id}" style="padding:2px 8px;font-size:11.5px">${o._branch.name}</span></td>
+      <td><span class="order-id">${escHtml(o.orderId||'—')}</span></td>
+      <td>${escHtml(name)}</td>
+      <td style="font-size:14px">${escHtml(o.service||'—')}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td style="color:var(--primary);font-weight:700">${peso(o.amount)}</td>
+      <td style="font-size:14px;color:var(--text-muted)">${fmtDate(o.createdAt)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);font-size:14.5px">No orders in this range</td></tr>';
+
+  // Unpaid orders table (ledger-style, all branches)
+  const unpaid = periodOrders.filter(o => !o.isPaid);
+  document.getElementById('rpt-unpaid-total').textContent = `${peso(totalPending)} · ${unpaid.length} order${unpaid.length!==1?'s':''}`;
+  const utbody = document.getElementById('report-unpaid-tbody');
+  const sortedUnpaid = [...unpaid].sort((a,b)=>(b.createdAt?.toDate?.()?.getTime()||0)-(a.createdAt?.toDate?.()?.getTime()||0));
+  if (!sortedUnpaid.length) {
+    utbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted);font-size:14.5px">No unpaid orders</td></tr>';
+  } else {
+    utbody.innerHTML = sortedUnpaid.map(o=>{
+      const cust=(branchData[o._branch.id]?.customers||[]).find(c=>c.id===o.customerId);
+      const name=cust?.name||o.customerName||'—';
+      return `<tr>
+        <td><span class="branch-pill ${o._branch.id}" style="padding:2px 8px;font-size:11.5px">${o._branch.name}</span></td>
+        <td><span class="order-id">${escHtml(o.orderId||'—')}</span></td>
+        <td>${escHtml(name)}</td>
+        <td style="font-size:14px">${escHtml(o.service||'—')}</td>
+        <td style="font-size:14px;color:var(--text-muted)">${fmtDate(o.createdAt)}</td>
+        <td style="text-align:right;color:#D97706;font-weight:700">${peso(o.amount)}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function printReport() {
+  const range = getAdminReportRange();
+  // Custom Range prints under the plain title "Sales Report" — every other
+  // range (All Time / Today / This Week / This Month) keeps the full title.
+  const rangeSelect = document.getElementById('report-range')?.value;
+  const titleEl = document.getElementById('print-title');
+  if (titleEl) titleEl.textContent = rangeSelect === 'custom' ? 'Sales Report' : 'DS Laundry Management — Report';
+  document.getElementById('print-date-label').textContent = `${range?.label || 'All Time'} · Generated: ${new Date().toLocaleString('en-PH')}`;
+  loadReportData();
+  openReportPreview();
+}
+// Renders exactly what will be printed/exported into a viewable modal first,
+// instead of jumping straight to the browser's print dialog. Lets the user
+// confirm the report looks right before downloading — especially useful on
+// mobile, where the print-to-PDF flow gives no other way to check it.
+function openReportPreview() {
+  const header = document.getElementById('print-header-block');
+  const src    = document.getElementById('reports-print-body');
+  const body   = document.getElementById('report-preview-body');
+  if (!src || !body) return;
+
+  const sheet = document.createElement('div');
+  sheet.style.cssText = 'background:#fff;max-width:800px;margin:0 auto;padding:28px 32px;border-radius:10px;box-shadow:0 8px 32px rgba(7,18,50,.15)';
+  if (header) {
+    const headerClone = header.cloneNode(true);
+    headerClone.classList.remove('print-only');
+    headerClone.style.display = 'block';
+    sheet.appendChild(headerClone);
+  }
+  const srcClone = src.cloneNode(true);
+  sheet.appendChild(srcClone);
+
+  body.innerHTML = '';
+  body.appendChild(sheet);
+  document.getElementById('report-preview-overlay').style.display = 'flex';
+}
+function closeReportPreview() {
+  document.getElementById('report-preview-overlay').style.display = 'none';
+}
+// Mobile-safe wrapper — some in-app/mobile browsers don't implement
+// window.print() at all and fail silently, so give the user feedback
+// instead of a dead button.
+function safePrint() {
+  if (typeof window.print !== 'function') {
+    showToast('Printing isn\'t supported in this browser — open this page in Chrome or Safari to save as PDF.', 'error');
+    return;
+  }
+  try {
+    window.print();
+  } catch (e) {
+    console.error(e);
+    showToast('Could not open the print dialog. Try your browser\'s Share → Print/Save PDF option instead.', 'error');
+  }
+}
+
+// ── REFRESH ──
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  await loadDashboard();
+  loadPriceHistory();
+  loadReportData();
+  btn.classList.remove('spinning');
+  showToast('Data refreshed!', 'success');
+}
+
+// ── TOAST ──
+function showToast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
