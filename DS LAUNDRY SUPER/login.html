@@ -27,7 +27,8 @@
     /* ── BACKGROUND IMAGE (login only) ── */
     .bg-image {
       position: fixed; inset: 0; z-index: 0;
-      background: url('https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=1920&q=80') center center / cover no-repeat;
+      background: url('blue_bubbles_bg.png') center center / cover no-repeat;
+      background-color: #071232; /* fallback tint while the image loads */
     }
     .bg-overlay {
       position: fixed; inset: 0; z-index: 1;
@@ -119,6 +120,13 @@
       position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
       font-size: 17px; pointer-events: none; opacity: .6;
     }
+    .pw-toggle {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; padding: 8px; line-height: 1;
+      opacity: .55; transition: opacity .15s;
+    }
+    .pw-toggle:hover { opacity: .9; }
     .form-control {
       width: 100%; padding: 11px 13px 11px 40px;
       background: #F3F6FC; border: 1.5px solid #DDE4F0;
@@ -223,7 +231,8 @@
         <label class="form-label" for="password">Password</label>
         <div class="input-wrap">
           <span class="input-icon">🔒</span>
-          <input type="password" class="form-control" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <input type="password" class="form-control" id="password" style="padding-right:38px" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePasswordVisibility()" aria-label="Show password" title="Show password">👁️</button>
         </div>
       </div>
 
@@ -234,18 +243,31 @@
 
       <div class="login-footer">
         <strong>DS Laundry</strong> — Multi-Branch Management<br/>
-        <div class="branch-badges">
-          <span class="branch-badge" style="background:#7C3AED">Ubujan</span>
-          <span class="branch-badge" style="background:#1D4ED8">Taloto</span>
-          <span class="branch-badge" style="background:#D97706">Bingag</span>
-          <span class="branch-badge" style="background:#C0311A">Catarman</span>
-        </div>
+        <div class="branch-badges" id="branch-badges"></div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+(function renderBranchBadges() {
+  const el = document.getElementById('branch-badges');
+  if (!el || !window.DS_BRANCHES) return;
+  el.innerHTML = DS_BRANCHES.map(b =>
+    `<span class="branch-badge" style="background:${b.color}">${b.name}</span>`
+  ).join('');
+})();
+
+function togglePasswordVisibility() {
+  const input = document.getElementById('password');
+  const btn = document.getElementById('pw-toggle');
+  const showing = input.type === 'password';
+  input.type = showing ? 'text' : 'password';
+  btn.textContent = showing ? '🙈' : '👁️';
+  btn.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+  btn.title = showing ? 'Hide password' : 'Show password';
+}
+
 firebase.auth().onAuthStateChanged(async user => {
   if (!user) return;
   try {

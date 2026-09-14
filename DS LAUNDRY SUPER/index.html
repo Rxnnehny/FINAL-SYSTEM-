@@ -155,6 +155,27 @@
     .avatar-upload-wrap .avatar-placeholder { width:72px; height:72px; border-radius:16px; background:var(--primary-light); border:2px dashed rgba(27,111,216,.35); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
     .avatar-upload-wrap .avatar-edit-badge { position:absolute; bottom:-4px; right:-4px; width:22px; height:22px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #fff; font-size:13px; }
 
+    /* Photo lightbox (enlarge an employee photo on click) */
+    .photo-lightbox-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(7,18,50,.88); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px; animation: fadeIn .15s; cursor: zoom-out;
+    }
+    .photo-lightbox-overlay img {
+      max-width: min(90vw, 480px); max-height: 82vh;
+      border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.55);
+      cursor: default; animation: slideUp .2s cubic-bezier(.175,.885,.32,1.275);
+    }
+    .photo-lightbox-close {
+      position: absolute; top: 18px; right: 18px;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.25);
+      color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .15s;
+    }
+    .photo-lightbox-close:hover { background: rgba(255,255,255,.25); }
+
     /* Order detail panel */
     .order-detail-panel {
       position:fixed; top:0; right:0; bottom:0; width:420px; max-width:100vw;
@@ -1286,6 +1307,12 @@
 </div>
 
 
+<!-- PHOTO LIGHTBOX (view any employee photo enlarged) -->
+<div class="photo-lightbox-overlay" id="photo-lightbox" style="display:none" onclick="closePhotoLightbox()">
+  <button type="button" class="photo-lightbox-close" onclick="closePhotoLightbox()" aria-label="Close">✕</button>
+  <img id="photo-lightbox-img" src="" alt="Employee photo" onclick="event.stopPropagation()"/>
+</div>
+
 <script>
 // ── GLOBALS ──
 let branchProfile = null;
@@ -1549,6 +1576,7 @@ async function loadAllData() {
   expensesData  = xSnap.docs.map(d=>({id:d.id,...d.data()}));
   renderExpenses();
   renderHistoryTable();
+  renderCustomersTable();
 
   // Real-time orders
   if (ordersUnsub) ordersUnsub();
@@ -1582,6 +1610,21 @@ function peso(n) { return '₱'+Number(n||0).toLocaleString('en-PH',{minimumFrac
 // Simplified whole-number peso format (no cents) — used for large headline totals like Net Income
 function pesoSimple(n) { return '₱'+Math.round(Number(n||0)).toLocaleString('en-PH'); }
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── PHOTO LIGHTBOX ── view an employee photo full-size (read-only view here)
+function openPhotoLightbox(url) {
+  if (!url) return;
+  const overlay = document.getElementById('photo-lightbox');
+  const img     = document.getElementById('photo-lightbox-img');
+  if (!overlay || !img) return;
+  img.src = url;
+  overlay.style.display = 'flex';
+}
+function closePhotoLightbox() {
+  const overlay = document.getElementById('photo-lightbox');
+  if (overlay) overlay.style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePhotoLightbox(); });
 function fmtDate(ts) { if(!ts) return '—'; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 
 // ── MANUALLY-TYPED DATE FIELDS (MM/DD/YYYY in the box, ISO underneath) ──
@@ -1793,6 +1836,7 @@ function showSection(name) {
   document.getElementById('page-title').textContent = titles[name]||name;
   if (name==='reports')   loadReportSection();
   if (name==='employees') renderEmployeeCards();
+  if (name==='customers') renderCustomersTable();
   if (name==='trash')     renderTrash();
   if (name==='orders')    { renderOrdersTable(); renderUnpaidLedger(); }
   if (name==='settings')  syncThemeUI();
@@ -2690,7 +2734,7 @@ function renderEmployeeCards() {
   const colors = ['#1B6FD8','#7C3AED','#D97706','#C0311A','#16A34A','#0891B2'];
   const statusBadgeMap = {active:'badge-paid',inactive:'badge-done','on-leave':'badge-pending'};
   const statusLabel    = {active:'Active',inactive:'Inactive','on-leave':'On Leave'};
-  const shiftColors    = {Morning:'#D97706',Afternoon:'#1B6FD8',Evening:'#7C3AED','Full Day':'#16A34A'};
+  const shiftColors    = {Morning:'#D97706',Afternoon:'#1B6FD8','Full Day':'#16A34A'};
   container.innerHTML = data.map(e => {
     const col   = colors[(e.name||'A').charCodeAt(0) % colors.length];
     const sc    = shiftColors[e.shift]||'#6B7A99';
@@ -2702,7 +2746,7 @@ function renderEmployeeCards() {
       ? `<span class="emp-tag">🔑 Can clock in</span>`
       : `<span class="emp-tag warn">⚠️ No PIN set — ask Super Admin</span>`;
     return `<div class="emp-list-card" style="border-left-color:${sc}">
-      <div class="emp-avatar" style="background:${col}">
+      <div class="emp-avatar" style="background:${col}${e.photoUrl?';cursor:zoom-in':''}" ${e.photoUrl?`onclick="openPhotoLightbox('${e.photoUrl}')"`:''}>
         ${photoHtml}
         ${!e.photoUrl ? (e.name||'E').charAt(0).toUpperCase() : ''}
       </div>

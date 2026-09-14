@@ -578,10 +578,43 @@ button.quick-btn:active { transform: translateY(0); }
 .emp-branch-tag { font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 10px; color: #fff; text-transform: uppercase; letter-spacing: .03em; }
 
 /* ─── AVATAR UPLOAD (add/edit employee) ─── */
-.avatar-upload-wrap { position: relative; width: 72px; height: 72px; margin: 0 auto 12px; cursor: pointer; }
+.avatar-upload-wrap { position: relative; width: 72px; height: 72px; margin: 0 auto 12px; cursor: default; }
+.avatar-upload-wrap.has-photo { cursor: zoom-in; }
 .avatar-upload-wrap .avatar-img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; border: 2px solid var(--border); display: block; }
 .avatar-upload-wrap .avatar-placeholder { width: 72px; height: 72px; border-radius: 16px; background: var(--primary-light); border: 2px dashed rgba(27,111,216,.35); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
 .avatar-upload-wrap .avatar-edit-badge { position: absolute; bottom: -4px; right: -4px; width: 22px; height: 22px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 13px; }
+
+/* Separate "Change Photo" action — clicking the avatar itself now only enlarges it */
+.change-photo-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px; padding: 7px 14px;
+  background: var(--primary-light); border: 1.5px solid rgba(27,111,216,.25);
+  border-radius: 999px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--primary); cursor: pointer; transition: all .15s;
+}
+.change-photo-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.change-photo-btn svg { flex-shrink: 0; }
+
+/* Photo lightbox (enlarge an employee photo on click — list card or modal preview) */
+.photo-lightbox-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(7,18,50,.88); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; animation: fadeIn .15s; cursor: zoom-out;
+}
+.photo-lightbox-overlay img {
+  max-width: min(90vw, 480px); max-height: 82vh;
+  border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.55);
+  cursor: default; animation: slideUp .2s cubic-bezier(.175,.885,.32,1.275);
+}
+.photo-lightbox-close {
+  position: absolute; top: 18px; right: 18px;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.25);
+  color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s;
+}
+.photo-lightbox-close:hover { background: rgba(255,255,255,.25); }
 
 /* ─── SHIFT SELECTOR / DAYS OFF CHIPS ─── */
 .shift-sel-opt { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--r-md); font-size: 14.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all .15s; background: var(--bg-card); }
@@ -879,6 +912,61 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 .history-up   { background: #ECFDF5; color: #065F46; }
 .history-down { background: #FEF2F2; color: #991B1B; }
 .history-same { background: #F3F4F6; color: #6B7280; }
+
+/* ─── REPORTS: BRANCH FILTER ─── */
+.branch-filter { position: relative; }
+.branch-filter-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 100%; padding: 9px 14px; background: var(--bg-card);
+  border: 1.5px solid var(--border); border-radius: var(--r-md);
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+  color: var(--text); cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.branch-filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.branch-filter-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.branch-filter-btn svg { flex-shrink: 0; opacity: .6; transition: transform .15s; }
+.branch-filter-btn.open svg { transform: rotate(180deg); }
+.branch-filter-dots { display: inline-flex; flex-shrink: 0; }
+.branch-filter-dots span {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 1.5px solid var(--bg-card); margin-left: -4px; display: inline-block;
+}
+.branch-filter-dots span:first-child { margin-left: 0; }
+.branch-filter-menu {
+  position: absolute; top: calc(100% + 8px); left: 0; z-index: 60;
+  width: 234px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg); padding: 8px; animation: fadeIn .15s;
+}
+.branch-filter-menu-actions {
+  display: flex; justify-content: space-between; gap: 6px;
+  padding: 4px 6px 8px; margin-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.branch-filter-menu-actions button {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 700;
+  color: var(--primary); padding: 2px 4px;
+}
+.branch-filter-menu-actions button:hover { text-decoration: underline; }
+.branch-filter-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; border-radius: 8px; cursor: pointer;
+  font-size: 14.5px; font-weight: 600; color: var(--text);
+  transition: background .12s;
+}
+.branch-filter-option:hover { background: var(--hover); }
+.branch-filter-option input[type="checkbox"] {
+  width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0;
+}
+.branch-filter-option .branch-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.branch-filter-option .branch-count { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--text-light); }
+.branch-filter-empty-note {
+  margin-top: 4px; padding: 8px 10px; background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #991B1B;
+}
+@media (max-width: 480px) {
+  .branch-filter-menu { left: auto; right: 0; width: 210px; }
+}
 
 /* ─── PRINT STYLES ─── */
 @media print {
